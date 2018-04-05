@@ -564,6 +564,8 @@ int mosquitto_publish(struct mosquitto *mosq, int *mid, const char *topic, int p
 	uint16_t local_mid;
 	int queue_status;
 
+	char *hilight_hader;
+
 	//mosquitto_publish qos control
 	if(!mosq || !topic || qos<0 || qos>3) return MOSQ_ERR_INVAL;
 	if(STREMPTY(topic)) return MOSQ_ERR_INVAL;
@@ -580,6 +582,19 @@ int mosquitto_publish(struct mosquitto *mosq, int *mid, const char *topic, int p
 
 	//qos control
 	if(qos == 0 || qos == 3){
+		if (qos == 3) {
+			if (payload != NULL) {
+
+				hilight_hader = (char *)malloc(sizeof(char) * payloadlen + 1);
+				memset(hilight_hader, 0, payloadlen + 1); //1바이트만 기본 1로 default
+				
+				hilight_hader[0] = 0x01;  //default 1 beat
+
+				strcat(hilight_hader, payload);
+				printf("\n%s\n", hilight_hader);
+			}
+			return _mosquitto_send_publish(mosq, local_mid, topic, payloadlen + 1, hilight_hader, qos, retain, false);
+		}
 		return _mosquitto_send_publish(mosq, local_mid, topic, payloadlen, payload, qos, retain, false);
 	}else{
 		message = _mosquitto_calloc(1, sizeof(struct mosquitto_message_all));

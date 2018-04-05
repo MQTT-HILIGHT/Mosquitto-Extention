@@ -62,10 +62,7 @@ void my_connect_callback(struct mosquitto *mosq, void *obj, int result)
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
 			case MSGMODE_STDIN_FILE:
-				rc = mosquitto_publish(mosq, &mid_sent, topic, msglen, message, qos, retain);
-				//qos control
-				//if(qos == 3)
-				//	mosquitto_disconnect(mosq);
+				rc = mosquitto_publish(mosq, &mid_sent, topic, msglen, message, qos, retain); //qos control
 				break;
 			case MSGMODE_NULL:
 				rc = mosquitto_publish(mosq, &mid_sent, topic, 0, NULL, qos, retain);

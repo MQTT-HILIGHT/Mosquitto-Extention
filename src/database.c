@@ -23,6 +23,7 @@ Contributors:
 #include <memory_mosq.h>
 #include <send_mosq.h>
 #include <time_mosq.h>
+#include "util_mosq.h"
 
 static int max_inflight = 20;
 static int max_queued = 100;
@@ -828,13 +829,14 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 	if(context->state != mosq_cs_connected){
 		return MOSQ_ERR_SUCCESS;
 	}
-
 	tail = context->msgs;
 	while(tail){
+
 		if(tail->direction == mosq_md_in){
 			msg_count++;
 		}
 		if(tail->state != mosq_ms_queued){
+
 			mid = tail->mid;
 			retries = tail->dup;
 			retain = tail->retain;
@@ -842,6 +844,9 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 			qos = tail->qos;
 			payloadlen = tail->store->payloadlen;
 			payload = tail->store->payload;
+			
+			printf("페이로드 %s\n", payload); //수정
+			my_control_count++;
 
 			switch(tail->state){ //packet handle send
 				case mosq_ms_publish_qos0:

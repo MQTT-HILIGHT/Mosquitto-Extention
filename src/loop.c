@@ -139,7 +139,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		expiration_check_time = time(NULL) + 3600;
 	}
 
-	while(run){
+	while(run) { //진짜 메인 loop 스타트!
 
 		mosquitto__free_disused_contexts(db);
 #ifdef WITH_SYS_TREE
@@ -147,7 +147,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			mqtt3_db_sys_update(db, db->config->sys_interval, start_time);
 		}
 #endif
-
+	
 		memset(pollfds, -1, sizeof(struct pollfd)*pollfd_max);
 
 		pollfd_index = 0;
@@ -159,9 +159,13 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		}
 
 		now_time = time(NULL);
-
 		time_count = 0;
-		HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){ //write hash
+
+		//printf("\n카운트 시작\n"); //수정
+		my_control_count = 0;
+
+		HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){ //write hash start			
+
 			if(time_count > 0){
 				time_count--;
 			}else{
@@ -192,7 +196,9 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 						|| context->bridge
 						|| now - context->last_msg_in < (time_t)(context->keepalive)*3/2){
 
-					if(mqtt3_db_message_write(db, context) == MOSQ_ERR_SUCCESS){ //last control
+					//printf("넘어가는 일반 Context\n"); //수정
+
+					if(mqtt3_db_message_write(db, context) == MOSQ_ERR_SUCCESS){ //write control
 						pollfds[pollfd_index].fd = context->sock;
 						pollfds[pollfd_index].events = POLLIN;
 						pollfds[pollfd_index].revents = 0;
@@ -218,7 +224,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 					do_disconnect(db, context);
 				}
 			}
-		}
+		} //write hash end
+		if (my_control_count != 0)
+			printf("Publish Queue 갯 수 : %d\n", my_control_count);
+		//printf("카운트 끝\n"); //수정
 
 #ifdef WITH_BRIDGE
 		time_count = 0;
@@ -422,7 +431,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			temp__expire_websockets_clients(db);
 		}
 #endif
-	}
+	} //진짜 루프 종료!
 
 	if(pollfds) _mosquitto_free(pollfds);
 	return MOSQ_ERR_SUCCESS;

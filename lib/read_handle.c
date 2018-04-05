@@ -43,12 +43,14 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 		case PUBCOMP:
 			return _mosquitto_handle_pubackcomp(mosq, "PUBCOMP");
 		case PUBLISH:
+			//printf("publish\n");
 			return _mosquitto_handle_publish(mosq);
 		case PUBREC:
 			return _mosquitto_handle_pubrec(mosq);
 		case PUBREL:
 			return _mosquitto_handle_pubrel(NULL, mosq);
 		case CONNACK:
+			//printf("connack\n");
 			return _mosquitto_handle_connack(mosq);
 		case SUBACK:
 			return _mosquitto_handle_suback(mosq);

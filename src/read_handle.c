@@ -31,7 +31,7 @@ Contributors:
 extern uint64_t g_pub_bytes_received;
 #endif
 
-int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context)
+int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context) //broker packet handle
 {
 	if(!context) return MOSQ_ERR_INVAL;
 
@@ -45,21 +45,27 @@ int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context)
 		case PUBCOMP:
 			return _mosquitto_handle_pubackcomp(db, context, "PUBCOMP");
 		case PUBLISH:
+			//printf("publish\n");
 			return mqtt3_handle_publish(db, context);
 		case PUBREC:
 			return _mosquitto_handle_pubrec(context);
 		case PUBREL:
 			return _mosquitto_handle_pubrel(db, context);
 		case CONNECT:
-			return mqtt3_handle_connect(db, context);
+			//printf("connect\n"); //이미 연결된 클라이언트를 init? 해주는 부분 만약 연결이 애매하다면 여기서 계속 connack을 보냄
+			return mqtt3_handle_connect(db, context); 
 		case DISCONNECT:
+			//printf("disconnect\n");
 			return mqtt3_handle_disconnect(db, context);
 		case SUBSCRIBE:
+			//printf("subscribe\n");
 			return mqtt3_handle_subscribe(db, context);
 		case UNSUBSCRIBE:
+			//printf("unsubscribe\n");
 			return mqtt3_handle_unsubscribe(db, context);
 #ifdef WITH_BRIDGE
 		case CONNACK:
+			//printf("connack\n");
 			return mqtt3_handle_connack(db, context);
 		case SUBACK:
 			return _mosquitto_handle_suback(context);

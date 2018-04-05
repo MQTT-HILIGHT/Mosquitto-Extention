@@ -317,7 +317,7 @@ int main(int argc, char *argv[])
 	listensock_index = 0;
 	for(i=0; i<config.listener_count; i++){
 		if(config.listeners[i].protocol == mp_mqtt){
-			if(mqtt3_socket_listen(&config.listeners[i])){
+			if(mqtt3_socket_listen(&config.listeners[i])){ //listen socket 
 				mqtt3_db_close(&int_db);
 				if(config.pid_file){
 					remove(config.pid_file);
@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
 #endif
 
 	//À§¿¡ init 
-
+	my_control_count = 0; //control
 	run = 1;
 	rc = mosquitto_main_loop(&int_db, listensock, listensock_count, listener_max);
 

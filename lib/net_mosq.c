@@ -166,7 +166,7 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 	// payload control
 	if (temp != NULL) {
 		while (temp) {
-			printf("Command 출력 %u\n", temp->command);
+			//printf("Command 출력 %u\n", temp->command);
 			temp = temp->next;
 		}
 	}
@@ -1147,9 +1147,9 @@ int _mosquitto_packet_read(struct mosquitto *mosq)  //packet control
 		g_pub_msgs_received++;
 	}
 #  endif
-	rc = mqtt3_packet_handle(db, mosq); 
+	rc = mqtt3_packet_handle(db, mosq);  //packet handle broker
 #else
-	rc = _mosquitto_packet_handle(mosq); //packet handle
+	rc = _mosquitto_packet_handle(mosq); //packet handle mosquitto
 #endif
 
 	/* Free data and reset values */
