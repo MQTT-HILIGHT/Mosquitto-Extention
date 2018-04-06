@@ -845,7 +845,7 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 			payloadlen = tail->store->payloadlen;
 			payload = tail->store->payload;
 			
-			printf("페이로드 %s\n", payload); //수정
+			//printf("페이로드 %s\n", payload); //수정
 			my_control_count++;
 
 			switch(tail->state){ //packet handle send

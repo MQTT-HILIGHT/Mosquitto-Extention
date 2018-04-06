@@ -591,7 +591,7 @@ int mosquitto_publish(struct mosquitto *mosq, int *mid, const char *topic, int p
 				hilight_hader[0] = 0x01;  //default 1 beat
 
 				strcat(hilight_hader, payload);
-				printf("\n%s\n", hilight_hader);
+				//printf("\n%s\n", hilight_hader);
 			}
 			return _mosquitto_send_publish(mosq, local_mid, topic, payloadlen + 1, hilight_hader, qos, retain, false);
 		}

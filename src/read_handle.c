@@ -102,9 +102,9 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 	qos = (header & 0x06)>>1;
 
 	//qos control
-	if(qos == 3){
+	/*if(qos == 3){
 		printf("qos 3 µé¾î¿È!!\n");
-	}
+	}*/
 	retain = (header & 0x01);
 
 	if(_mosquitto_read_string(&context->in_packet, &topic)) return 1;
