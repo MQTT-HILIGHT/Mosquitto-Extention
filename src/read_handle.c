@@ -31,7 +31,7 @@ Contributors:
 extern uint64_t g_pub_bytes_received;
 #endif
 
-int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context) //broker packet handle
+int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context) //broker packet handle control
 {
 	if(!context) return MOSQ_ERR_INVAL;
 
@@ -100,11 +100,6 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 
 	dup = (header & 0x08)>>3;
 	qos = (header & 0x06)>>1;
-
-	//qos control
-	/*if(qos == 3){
-		printf("qos 3 µé¾î¿È!!\n");
-	}*/
 	retain = (header & 0x01);
 
 	if(_mosquitto_read_string(&context->in_packet, &topic)) return 1;
@@ -113,6 +108,7 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 		_mosquitto_free(topic);
 		return 1;
 	}
+
 #ifdef WITH_BRIDGE
 	if(context->bridge && context->bridge->topics && context->bridge->topic_remapping){
 		for(i=0; i<context->bridge->topic_count; i++){
@@ -221,6 +217,28 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 	}
 
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBLISH from %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
+	
+	//enqueue ¼öÁ¤
+	if (qos == 3) {
+		
+		element data;
+		data.mosq = context;
+
+		data.payload = (char *)malloc(sizeof(char)*payloadlen + 1);
+		data.topic = (char *)malloc(sizeof(char)*strlen(topic) + 1);
+		strcpy(data.payload, payload);
+
+		strcpy(data.topic, topic);
+
+		data.dup = dup;
+		data.mid = mid;
+		data.qos = qos;
+		data.retain = retain;
+		data.payloadlen = payloadlen;
+		highlight_enqueue(&highlight_urgency_queue, data);
+		return 1;
+	}
+
 	if(qos > 0){
 		mqtt3_db_message_store_find(context, mid, &stored);
 	}

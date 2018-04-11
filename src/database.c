@@ -820,6 +820,8 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 	uint32_t payloadlen;
 	const void *payload;
 	int msg_count = 0;
+	
+
 
 	if(!context || context->sock == INVALID_SOCKET
 			|| (context->state == mosq_cs_connected && !context->id)){
@@ -829,6 +831,7 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 	if(context->state != mosq_cs_connected){
 		return MOSQ_ERR_SUCCESS;
 	}
+
 	tail = context->msgs;
 	while(tail){
 
@@ -845,8 +848,7 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 			payloadlen = tail->store->payloadlen;
 			payload = tail->store->payload;
 			
-			//printf("페이로드 %s\n", payload); //수정
-			my_control_count++;
+			my_control_count++; //수정
 
 			switch(tail->state){ //packet handle send
 				case mosq_ms_publish_qos0:

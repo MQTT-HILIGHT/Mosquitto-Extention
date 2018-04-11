@@ -1,3 +1,4 @@
+
 /*
 Copyright (c) 2009-2014 Roger Light <roger@atchoo.org>
 
@@ -21,19 +22,58 @@ Contributors:
 #include "tls_mosq.h"
 #include "mosquitto.h"
 #include "mosquitto_internal.h"
+
 #ifdef WITH_BROKER
 #  include "mosquitto_broker.h"
 #endif
 
 int _mosquitto_packet_alloc(struct _mosquitto_packet *packet);
+
 #ifdef WITH_BROKER
 void _mosquitto_check_keepalive(struct mosquitto_db *db, struct mosquitto *mosq);
 #else
 void _mosquitto_check_keepalive(struct mosquitto *mosq);
 #endif
+
 uint16_t _mosquitto_mid_generate(struct mosquitto *mosq);
 FILE *_mosquitto_fopen(const char *path, const char *mode, bool restrict_read);
 
+/*
+* Highlight Code
+*/
+
+typedef struct {
+	struct mosquitto *mosq;
+	char *payload;
+	char *topic;
+	int8_t retain;
+	int16_t mid;
+	int32_t payloadlen;
+	int8_t dup;
+	int8_t qos;
+
+}element;
+
+typedef struct Node //노드 정의
+{
+	element data;
+	struct Node *next;
+}Node;
+
+
+typedef struct Queue //Queue 구조체 정의
+{
+	Node *front; //맨 앞(꺼낼 위치)
+	Node *rear;  //맨 뒤(보관할 위치)
+	int count;   //보관 개수
+}Queue;
+
+void highlight_init_queue(Queue *queue);
+int highlight_is_empty(Queue *queue);
+void highlight_enqueue(Queue *queue, element data);
+element highlight_dequeue(Queue *queue);
+
+Queue highlight_urgency_queue;
 int my_control_count; //control
 
 #ifdef REAL_WITH_TLS_PSK

@@ -94,6 +94,7 @@ int _mosquitto_send_publish(struct mosquitto *mosq, uint16_t mid, const char *to
 	char *topic_temp = NULL;
 #endif
 #endif
+
 	assert(mosq);
 	assert(topic);
 

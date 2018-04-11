@@ -43,6 +43,59 @@ Contributors:
 #include <libwebsockets.h>
 #endif
 
+/*
+ * highlight code
+ */
+
+void highlight_init_queue(Queue *queue)
+{
+	queue->front = queue->rear = NULL; //front와 rear를 NULL로 설정
+	queue->count = 0;//보관 개수를 0으로 설정
+}
+
+int highlight_is_empty(Queue *queue)
+{
+	return queue->count == 0;    //보관 개수가 0이면 빈 상태
+}
+
+void highlight_enqueue(Queue *queue, element data)
+{
+	Node *now = (Node *)malloc(sizeof(Node)); //노드 생성
+	now->data = data;//데이터 설정
+	now->next = NULL;
+
+	if (highlight_is_empty(queue))//큐가 비어있을 때
+	{
+		queue->front = now;//맨 앞을 now로 설정       
+	}
+	else//비어있지 않을 때
+	{
+		queue->rear->next = now;//맨 뒤의 다음을 now로 설정
+	}
+	queue->rear = now;//맨 뒤를 now로 설정   
+	queue->count++;//보관 개수를 1 증가
+}
+
+element highlight_dequeue(Queue *queue)
+{
+	element re;
+	Node *now;
+
+	if (highlight_is_empty(queue))//큐가 비었을 때
+	{
+		printf("\nEmpty Highligh Queue\n");
+		return;
+	}
+	now = queue->front;//맨 앞의 노드를 now에 기억
+	re = now->data;//반환할 값은 now의 data로 설정
+	queue->front = now->next;//맨 앞은 now의 다음 노드로 설정
+	free(now);//now 소멸
+	queue->count--;//보관 개수를 1 감소
+
+	return re;
+}
+
+
 int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 {
 	uint8_t remaining_bytes[5], byte;
