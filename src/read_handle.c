@@ -46,6 +46,7 @@ int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context) //br
 			return _mosquitto_handle_pubackcomp(db, context, "PUBCOMP");
 		case PUBLISH:
 			//printf("publish\n");
+			context->highlight_num = 1; // control
 			return mqtt3_handle_publish(db, context);
 		case PUBREC:
 			return _mosquitto_handle_pubrec(context);
@@ -217,26 +218,30 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 	}
 
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBLISH from %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
+
+
+	//enqueue 수정  @@
+
+	element data;
 	
-	//enqueue 수정
-	if (qos == 3) {
-		
-		element data;
-		data.mosq = context;
+	data.head = NULL;  //head 포인터 초기화
 
-		data.payload = (char *)malloc(sizeof(char)*payloadlen + 1);
-		data.topic = (char *)malloc(sizeof(char)*strlen(topic) + 1);
-		strcpy(data.payload, payload);
+	data.payload = (char *)malloc(sizeof(char)*payloadlen + 1);
+	data.topic = (char *)malloc(sizeof(char)*strlen(topic) + 1);
+	strcpy(data.payload, payload);
+	strcpy(data.topic, topic);
 
-		strcpy(data.topic, topic);
+	data.dup = dup;
+	data.mid = mid;
+	data.qos = qos;
+	data.retain = retain;
+	data.payloadlen = payloadlen;
 
-		data.dup = dup;
-		data.mid = mid;
-		data.qos = qos;
-		data.retain = retain;
-		data.payloadlen = payloadlen;
-		highlight_enqueue(&highlight_urgency_queue, data);
-		return 1;
+	if (qos == 3) {		
+		highlight_enqueue(&highlight_urgency_queue, data); //urgency queue 에 넣음
+	}
+	else { //normal queue
+		highlight_enqueue(&highlight_normal_queue, data);
 	}
 
 	if(qos > 0){

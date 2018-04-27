@@ -39,11 +39,11 @@ uint16_t _mosquitto_mid_generate(struct mosquitto *mosq);
 FILE *_mosquitto_fopen(const char *path, const char *mode, bool restrict_read);
 
 /*
-* Highlight Code
+* Highlight Code 수정
 */
 
 typedef struct {
-	struct mosquitto *mosq;
+	struct mosquitto *head;  //subscribe head ptr
 	char *payload;
 	char *topic;
 	int8_t retain;
@@ -51,7 +51,6 @@ typedef struct {
 	int32_t payloadlen;
 	int8_t dup;
 	int8_t qos;
-
 }element;
 
 typedef struct Node //노드 정의
@@ -71,9 +70,18 @@ typedef struct Queue //Queue 구조체 정의
 void highlight_init_queue(Queue *queue);
 int highlight_is_empty(Queue *queue);
 void highlight_enqueue(Queue *queue, element data);
+void highlight_last_element_insert_subscribe(Queue *queue, struct mosquitto *context);
 element highlight_dequeue(Queue *queue);
 
+//sub list
+void highlight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node);
+void highlight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *removed);
+void highlight_display(struct mosquitto *head);
+struct moquitto *highlight_find(struct mosquitto *head, struct mosquitto val);
+struct moquitto *highlight_before_find(struct mosquitto *head, struct mosquitto val);
+
 Queue highlight_urgency_queue;
+Queue highlight_normal_queue;
 int my_control_count; //control
 
 #ifdef REAL_WITH_TLS_PSK

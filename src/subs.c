@@ -132,7 +132,18 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 				 * retain should be false. */
 				client_retain = false;
 			}
-			if(mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, client_retain, stored) == 1) rc = 1;
+			//¼öÁ¤
+			if (qos == 3) {
+				highlight_last_element_insert_subscribe(&highlight_urgency_queue, leaf->context);
+			}
+			else {
+				highlight_last_element_insert_subscribe(&highlight_normal_queue, leaf->context);
+			}
+			//highlight_display(highlight_urgency_queue.rear->data.head);
+
+			if (mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, client_retain, stored) == 1) {
+				rc = 1;
+			}
 		}else{
 			return 1; /* Application error */
 		}

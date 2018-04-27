@@ -4,7 +4,7 @@ Copyright (c) 2010-2014 Roger Light <roger@atchoo.org>
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License v1.0
 and Eclipse Distribution License v1.0 which accompany this distribution.
- 
+
 The Eclipse Public License is available at
    http://www.eclipse.org/legal/epl-v10.html
 and the Eclipse Distribution License is available at
@@ -155,6 +155,8 @@ struct mosquitto {
 #ifndef WITH_BROKER
 	mosq_sock_t sockpairR, sockpairW;
 #endif
+	//highlight code 수정
+	struct mosquitto *link;
 #if defined(__GLIBC__) && defined(WITH_ADNS)
 	struct gaicb *adns; /* For getaddrinfo_a */
 #endif
@@ -218,6 +220,9 @@ struct mosquitto {
 	struct _mosquitto_subhier **subs;
 	int sub_count;
 	int pollfd_index;
+	
+	int highlight_num; //control 수정
+
 #  ifdef WITH_WEBSOCKETS
 #    if defined(LWS_LIBRARY_VERSION_NUMBER)
 	struct lws *wsi;

@@ -95,6 +95,75 @@ element highlight_dequeue(Queue *queue)
 	return re;
 }
 
+//sub list
+void highlight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node) {
+
+	if (*phead == NULL) {
+		new_node->link = NULL;
+		*phead = new_node;
+	}
+	else if (p == NULL) {
+		new_node->link = *phead;
+		*phead = new_node;
+	}
+	else {
+		new_node->link = p->link;
+		p->link = new_node;
+	}
+}
+
+void highlight_last_element_insert_subscribe(Queue *queue, struct mosquitto *context) {
+	highlight_insert_node(&queue->rear->data.head, highlight_before_find(queue->rear->data.head, *context), context);
+}
+
+void highlight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *removed) {
+	if (p == NULL) {
+		*phead = (*phead)->link;
+	}
+	else {
+		p->link = removed->link;
+	}
+	//free(removed); //¼öÁ¤
+}
+void highlight_display(struct mosquitto *head) {
+	struct mosquitto *p = head;
+	while (p != NULL) {
+		printf("display command state : %d\n",((p->in_packet.command) & 0xF0));
+		p = p->link;
+	}
+}
+struct moquitto *highlight_find(struct mosquitto *head, struct mosquitto val) {
+	struct mosquitto *p = head;
+	while (p != NULL) {
+		if ( strcpy(p->id, val.id) == 0 ) {
+			break;
+		}
+		p = p->link;
+	}
+	return p;
+}
+struct moquitto *highlight_before_find(struct mosquitto *head, struct mosquitto val) {
+	struct mosquitto *p = head;
+	struct mosquitto *p_before = head;
+	int cnt = 0;
+
+	printf("ŸÓ? Àß µÊ?\n");
+
+	while (p != NULL) {
+		if (strcpy(p->id, val.id) == 0) {
+			break;
+		}
+		p = p->link;
+
+		cnt++;
+		if (cnt > 0) {
+			p_before = p_before->link;
+		}
+	}
+	return p_before;
+}
+
+
 
 int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 {

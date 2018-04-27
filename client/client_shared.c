@@ -498,7 +498,7 @@ int client_config_line_proc(struct mosq_config *cfg, int pub_or_sub, int argc, c
 
 				if (cfg->qos == 3) {
 					//flag urgency
-					printf("\n사용자 명령어 -q 3 옵션 시작\n", cfg->qos);
+					printf("\n사용자 명령어 -q 3 옵션 시작 %d \n", cfg->qos);
 					//cfg->qos = 0;
 				}
 				//qos control!
@@ -718,10 +718,18 @@ int client_opts_set(struct mosquitto *mosq, struct mosq_config *cfg)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int client_id_generate(struct mosq_config *cfg, const char *id_base)
+int client_id_generate(struct mosq_config *cfg, const char *id_base) //id control
 {
 	int len;
 	char hostname[256];
+	int my_getpid = getpid(); //수정 멘탈 나감...
+
+	if (getpid() > 100000) {
+		printf("왜 자꾸 pid 가 10만이 넘냐? %d\n", getpid());
+		while (my_getpid > 100000) {
+			my_getpid -= 10000;
+		}
+	}
 
 	if(cfg->id_prefix){
 		cfg->id = malloc(strlen(cfg->id_prefix)+10);
@@ -730,7 +738,7 @@ int client_id_generate(struct mosq_config *cfg, const char *id_base)
 			mosquitto_lib_cleanup();
 			return 1;
 		}
-		snprintf(cfg->id, strlen(cfg->id_prefix)+10, "%s%d", cfg->id_prefix, getpid());
+		snprintf(cfg->id, strlen(cfg->id_prefix)+10, "%s%d", cfg->id_prefix, my_getpid);
 	}else if(!cfg->id){
 		hostname[0] = '\0';
 		gethostname(hostname, 256);
@@ -742,7 +750,7 @@ int client_id_generate(struct mosq_config *cfg, const char *id_base)
 			mosquitto_lib_cleanup();
 			return 1;
 		}
-		snprintf(cfg->id, len, "%s|%d-%s", id_base, getpid(), hostname);
+		snprintf(cfg->id, len, "%s|%d-%s", id_base, my_getpid, hostname);
 		if(strlen(cfg->id) > MOSQ_MQTT_ID_MAX_LENGTH){
 			/* Enforce maximum client id length of 23 characters */
 			cfg->id[MOSQ_MQTT_ID_MAX_LENGTH] = '\0';

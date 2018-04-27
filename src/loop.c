@@ -117,9 +117,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	time_t last_timeout_check = 0;
 	char *id;
 
+
 	int highlight_count = 0; //수정
 	element data;
-	int my_subscription_count; 
+	int my_count;
 
 #ifndef WIN32
 	sigemptyset(&sigblock);
@@ -166,32 +167,46 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		now_time = time(NULL);
 		time_count = 0;
 
+
 		my_control_count = 0; //수정
-
-		printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-
+		//printf("시작  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 		// 수정
 		if (highlight_urgency_queue.count != 0) {
 			printf("My Urgency Queue 갯 수 : %d\n", highlight_urgency_queue.count);
 		}
-		//여기서부터
-		if (!highlight_is_empty(&highlight_urgency_queue)) {
-//			for (highlight_count = 0; highlight_count < highlight_urgency_queue.count; highlight_count++) {
-			data = highlight_dequeue(&highlight_urgency_queue);
-			HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp) { //urgency hash control
-				//printf("%d urgency payload : %s  \n", (context->in_packet.command & 0x06) >> 1, data.payload);
-				//printf("구독자 수 : %d\n", db->subscription_count);
-				if (!context || context->sock == INVALID_SOCKET
-					|| (context->state == mosq_cs_connected && !context->id)) {
-					return MOSQ_ERR_INVAL;
-				}
-
-				if (context->state != mosq_cs_connected) {
-					return MOSQ_ERR_SUCCESS;
-				}
-				_mosquitto_send_publish(context, data.mid, data.topic, data.payloadlen, data.payload, 0, 0, 0);
-			}
+		if (highlight_urgency_queue.count != 0) {
+			printf("My Normal Queue 갯 수 : %d\n", highlight_normal_queue.count);
 		}
+
+		for (my_count = 0; my_count < highlight_urgency_queue.count; my_count++) { //my urgency
+			printf("---------------- urgency send 시작 ----------------\n");
+			if (!highlight_is_empty(&highlight_urgency_queue)) {
+				data = highlight_dequeue(&highlight_urgency_queue);
+			}
+
+			if (highlight_db_message_write(data) == MOSQ_ERR_SUCCESS) {
+				printf("성공!\n");
+			}
+			printf("\n---------------- urgency send 끝 ----------------\n");
+		}
+
+		for (my_count = 0; my_count < highlight_normal_queue.count; my_count++) { //my urgency
+			printf("---------------- normal send 시작 ----------------\n");
+			if (!highlight_is_empty(&highlight_normal_queue)) {
+				data = highlight_dequeue(&highlight_normal_queue);
+			}
+
+			if (highlight_db_message_write(data) == MOSQ_ERR_SUCCESS) {
+				printf("성공!\n");
+			}
+			printf("\n---------------- normal send 끝 ----------------\n");
+		}
+
+		while (!highlight_is_empty(&highlight_urgency_queue)) {
+			printf("그럴리가 없음\n");
+			highlight_dequeue(&highlight_urgency_queue);
+		}
+		
 
 		HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){ //write hash start	
 
@@ -219,11 +234,6 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 					}
 				}
 #endif
-
-
-				if (my_control_count == 0) { // 수정
-					my_subscription_count = db->subscription_count;
-				}
 
 				/* Local bridges never time out in this fashion. */
 				if(!(context->keepalive)
@@ -260,6 +270,8 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		if (my_control_count != 0) {
 			printf("Publish Queue 갯 수 : %d\n", my_control_count);
 		}
+
+		//printf("끝  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
 #ifdef WITH_BRIDGE
 		time_count = 0;

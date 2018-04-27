@@ -832,7 +832,9 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 		return MOSQ_ERR_SUCCESS;
 	}
 
-	tail = context->msgs;
+	//tail = context->msgs;  수정 수정 @@
+	tail = NULL;
+
 	while(tail){
 
 		if(tail->direction == mosq_md_in){
@@ -937,6 +939,26 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 		}
 	}
 
+	return MOSQ_ERR_SUCCESS;
+}
+
+int highlight_db_message_write(element data) //수정
+{
+	data.qos = 0;
+	struct mosquitto *context = data.head;
+	while (context != NULL) {
+		if (!context || context->sock == INVALID_SOCKET
+			|| (context->state == mosq_cs_connected && !context->id)) {
+			return MOSQ_ERR_INVAL;
+		}
+
+		if (context->state != mosq_cs_connected) {
+			return MOSQ_ERR_SUCCESS;
+		}
+		printf("send 함!~~~~~~~~~~~~~~~~~~~~~\n");
+		_mosquitto_send_publish(context, data.mid, data.topic, data.payloadlen, data.payload, 0, data.retain, data.retain);
+		context = context->link;
+	}
 	return MOSQ_ERR_SUCCESS;
 }
 
