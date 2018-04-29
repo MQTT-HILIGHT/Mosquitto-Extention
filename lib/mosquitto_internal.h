@@ -157,6 +157,8 @@ struct mosquitto {
 #endif
 	//highlight code 수정
 	struct mosquitto *link;
+	int urgency_val;
+
 #if defined(__GLIBC__) && defined(WITH_ADNS)
 	struct gaicb *adns; /* For getaddrinfo_a */
 #endif
@@ -221,8 +223,6 @@ struct mosquitto {
 	int sub_count;
 	int pollfd_index;
 	
-	int highlight_num; //control 수정
-
 #  ifdef WITH_WEBSOCKETS
 #    if defined(LWS_LIBRARY_VERSION_NUMBER)
 	struct lws *wsi;

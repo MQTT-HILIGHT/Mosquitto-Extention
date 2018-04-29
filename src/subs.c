@@ -68,6 +68,7 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 	uint16_t mid;
 	struct _mosquitto_subleaf *leaf;
 	bool client_retain;
+	struct mosquitto *old = NULL;
 
 	leaf = hier->subs;
 
@@ -113,7 +114,11 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 			}else{
 				if(qos > client_qos){
 					msg_qos = client_qos;
-				}else{
+				}
+				else if (qos == 3) { //수정
+					msg_qos = 0;
+				}
+				else{
 					msg_qos = qos;
 				}
 			}
@@ -132,15 +137,36 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 				 * retain should be false. */
 				client_retain = false;
 			}
-			//수정
+			//수정 연결리스트
 			if (qos == 3) {
 				highlight_last_element_insert_subscribe(&highlight_urgency_queue, leaf->context);
 			}
-			else {
+			/*else {
 				highlight_last_element_insert_subscribe(&highlight_normal_queue, leaf->context);
-			}
+			}*/
 			//highlight_display(highlight_urgency_queue.rear->data.head);
 
+			//my_rand 수정!
+			/*if (old == NULL) {
+				old = leaf->context;
+			}
+			else {
+				if (strcmp(old->id, leaf->context->id) == 0) {
+					char my_rand[4];
+					srand(time(NULL));
+					my_rand[0] = rand() % 26 + 65;
+					my_rand[1] = rand() % 26 + 65;
+					my_rand[2] = rand() % 26 + 65;
+					my_rand[3] = '\0';
+
+					strcpy(leaf->context->id, my_rand);
+
+					printf("@@@@@@@@@@@@@@@ 말이 됨~??????????@@@@@@@@@@2\n");
+				}				
+			}
+			printf("old odl  ~~~~~~~~~~~~~~` leaf context-id %s     old context-id %s\n", leaf->context->id, old->id);
+			old = leaf->context;*/
+			printf("밖에서~~~~~~~~~~~~~~` leaf context-id %s\n", leaf->context->id);
 			if (mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, client_retain, stored) == 1) {
 				rc = 1;
 			}

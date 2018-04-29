@@ -383,8 +383,6 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-	//À§¿¡ init 
-	my_control_count = 0; //control
 	run = 1;
 	rc = mosquitto_main_loop(&int_db, listensock, listensock_count, listener_max);
 

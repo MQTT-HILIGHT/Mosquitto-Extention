@@ -89,6 +89,7 @@ element highlight_dequeue(Queue *queue)
 	now = queue->front;//맨 앞의 노드를 now에 기억
 	re = now->data;//반환할 값은 now의 data로 설정
 	queue->front = now->next;//맨 앞은 now의 다음 노드로 설정
+
 	free(now);//now 소멸
 	queue->count--;//보관 개수를 1 감소
 
@@ -146,8 +147,6 @@ struct moquitto *highlight_before_find(struct mosquitto *head, struct mosquitto 
 	struct mosquitto *p = head;
 	struct mosquitto *p_before = head;
 	int cnt = 0;
-
-	printf("읭? 잘 됨?\n");
 
 	while (p != NULL) {
 		if (strcpy(p->id, val.id) == 0) {

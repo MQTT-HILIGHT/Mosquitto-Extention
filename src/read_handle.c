@@ -45,8 +45,6 @@ int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context) //br
 		case PUBCOMP:
 			return _mosquitto_handle_pubackcomp(db, context, "PUBCOMP");
 		case PUBLISH:
-			//printf("publish\n");
-			context->highlight_num = 1; // control
 			return mqtt3_handle_publish(db, context);
 		case PUBREC:
 			return _mosquitto_handle_pubrec(context);
@@ -240,11 +238,11 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 	if (qos == 3) {		
 		highlight_enqueue(&highlight_urgency_queue, data); //urgency queue ¿¡ ³ÖÀ½
 	}
-	else { //normal queue
+	/*else { //normal queue
 		highlight_enqueue(&highlight_normal_queue, data);
-	}
+	}*/
 
-	if(qos > 0){
+	if(qos > 0 && qos != 3){
 		mqtt3_db_message_store_find(context, mid, &stored);
 	}
 	if(!stored){

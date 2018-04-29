@@ -117,7 +117,6 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	time_t last_timeout_check = 0;
 	char *id;
 
-
 	int highlight_count = 0; //수정
 	element data;
 	int my_count;
@@ -167,16 +166,15 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		now_time = time(NULL);
 		time_count = 0;
 
-
 		my_control_count = 0; //수정
 		//printf("시작  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 		// 수정
 		if (highlight_urgency_queue.count != 0) {
 			printf("My Urgency Queue 갯 수 : %d\n", highlight_urgency_queue.count);
 		}
-		if (highlight_urgency_queue.count != 0) {
+		/*if (highlight_urgency_queue.count != 0) {
 			printf("My Normal Queue 갯 수 : %d\n", highlight_normal_queue.count);
-		}
+		}*/
 
 		for (my_count = 0; my_count < highlight_urgency_queue.count; my_count++) { //my urgency
 			printf("---------------- urgency send 시작 ----------------\n");
@@ -190,7 +188,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			printf("\n---------------- urgency send 끝 ----------------\n");
 		}
 
-		for (my_count = 0; my_count < highlight_normal_queue.count; my_count++) { //my urgency
+		/*for (my_count = 0; my_count < highlight_normal_queue.count; my_count++) { //my urgency
 			printf("---------------- normal send 시작 ----------------\n");
 			if (!highlight_is_empty(&highlight_normal_queue)) {
 				data = highlight_dequeue(&highlight_normal_queue);
@@ -200,14 +198,14 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				printf("성공!\n");
 			}
 			printf("\n---------------- normal send 끝 ----------------\n");
-		}
+		}*/
 
 		while (!highlight_is_empty(&highlight_urgency_queue)) {
 			printf("그럴리가 없음\n");
 			highlight_dequeue(&highlight_urgency_queue);
 		}
-		
-
+		Sleep(2000);
+//		printf("시작!@@@@@@@@@@@@@@@@@\n");
 		HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){ //write hash start	
 
 			if(time_count > 0){
@@ -217,6 +215,8 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 				now = mosquitto_time();
 			}
 			context->pollfd_index = -1;
+			
+			//printf("~~~~~~~~~~~~~~~ write hash ~~~~~~  \n\n");
 
 			if(context->sock != INVALID_SOCKET){
 #ifdef WITH_BRIDGE
@@ -270,8 +270,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		if (my_control_count != 0) {
 			printf("Publish Queue 갯 수 : %d\n", my_control_count);
 		}
-
-		//printf("끝  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
+//		printf("끝  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
 #ifdef WITH_BRIDGE
 		time_count = 0;

@@ -122,6 +122,7 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 	message->timestamp = mosquitto_time();
 	switch(message->msg.qos){//qos control
 		case 0:
+		case 3:
 			pthread_mutex_lock(&mosq->callback_mutex);
 			if(mosq->on_message){
 				mosq->in_callback = true;
