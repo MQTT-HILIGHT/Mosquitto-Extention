@@ -167,14 +167,13 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		time_count = 0;
 
 		my_control_count = 0; //수정
+
+		//Sleep(2000); //수정
+
 		//printf("시작  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-		// 수정
 		if (highlight_urgency_queue.count != 0) {
 			printf("My Urgency Queue 갯 수 : %d\n", highlight_urgency_queue.count);
 		}
-		/*if (highlight_urgency_queue.count != 0) {
-			printf("My Normal Queue 갯 수 : %d\n", highlight_normal_queue.count);
-		}*/
 
 		for (my_count = 0; my_count < highlight_urgency_queue.count; my_count++) { //my urgency
 			printf("---------------- urgency send 시작 ----------------\n");
@@ -188,24 +187,6 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			printf("\n---------------- urgency send 끝 ----------------\n");
 		}
 
-		/*for (my_count = 0; my_count < highlight_normal_queue.count; my_count++) { //my urgency
-			printf("---------------- normal send 시작 ----------------\n");
-			if (!highlight_is_empty(&highlight_normal_queue)) {
-				data = highlight_dequeue(&highlight_normal_queue);
-			}
-
-			if (highlight_db_message_write(data) == MOSQ_ERR_SUCCESS) {
-				printf("성공!\n");
-			}
-			printf("\n---------------- normal send 끝 ----------------\n");
-		}*/
-
-		while (!highlight_is_empty(&highlight_urgency_queue)) {
-			printf("그럴리가 없음\n");
-			highlight_dequeue(&highlight_urgency_queue);
-		}
-		Sleep(2000);
-//		printf("시작!@@@@@@@@@@@@@@@@@\n");
 		HASH_ITER(hh_sock, db->contexts_by_sock, context, ctxt_tmp){ //write hash start	
 
 			if(time_count > 0){
@@ -268,7 +249,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			}
 		} //write hash end
 		if (my_control_count != 0) {
-			printf("Publish Queue 갯 수 : %d\n", my_control_count);
+			printf("보내야 할 Publish Message 갯 수(Queue * subs_count) : %d\n", my_control_count);
 		}
 //		printf("끝  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 

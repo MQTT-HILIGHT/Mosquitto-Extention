@@ -17,8 +17,6 @@ Contributors:
 #include <assert.h>
 #include <stdio.h>
 
-#include <stdlib.h> //수정
-
 #include <config.h>
 
 #include <mosquitto_broker.h>
@@ -202,7 +200,7 @@ static void _message_remove(struct mosquitto_db *db, struct mosquitto *context, 
 {
 	int i;
 	struct mosquitto_client_msg *tail;
-
+	
 	if(!context || !msg || !(*msg)){
 		return;
 	}
@@ -233,6 +231,7 @@ static void _message_remove(struct mosquitto_db *db, struct mosquitto *context, 
 	}
 	tail = context->msgs;
 	i = 0;
+
 	while(tail && tail->state == mosq_ms_queued && i<max_inflight){
 		if(tail->direction == mosq_md_out){
 			switch(tail->qos){
@@ -252,7 +251,6 @@ static void _message_remove(struct mosquitto_db *db, struct mosquitto *context, 
 				tail->state = mosq_ms_send_pubrec;
 			}
 		}
-
 		tail = tail->next;
 	}
 }
@@ -312,13 +310,13 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 	int rc = 0;
 	int i;
 	char **dest_ids;
-	printf("0 -------------------메시지 연결--------------- qos %d \n", qos);
+	//printf("0 -------------------메시지 연결--------------- qos %d \n", qos);
 	assert(stored);
 	if(!context) return MOSQ_ERR_INVAL;
-	printf("0.1 -------------------메시지 연결--------------- qos %d \n", qos);
+	//printf("0.1 -------------------메시지 연결--------------- qos %d \n", qos);
 	if(!context->id) return MOSQ_ERR_SUCCESS; /* Protect against unlikely "client is disconnected but not entirely freed" scenario */
-	printf("0.2 -------------------메시지 연결--------------- qos %d \n", qos);
-	printf("0.21 ------------- context_id --------------------%s\n", context->id);
+	//printf("0.2 -------------------메시지 연결--------------- qos %d \n", qos);
+	//printf("0.21 ------------- context_id --------------------%s\n", context->id);
 	/* Check whether we've already sent this message to this client
 	 * for outgoing messages only.
 	 * If retain==true then this is a stale retained message and so should be
@@ -341,24 +339,24 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 			}
 		}
 	}*/
-	printf("0.3 -------------------메시지 연결--------------- qos %d \n", qos);
+	//printf("0.3 -------------------메시지 연결--------------- qos %d \n", qos);
 	if(context->sock == INVALID_SOCKET){
 		/* Client is not connected only queue messages with QoS>0. */
-		if(qos == 0 && !db->config->queue_qos0_messages){
+		if((qos == 0 || qos == 3) && !db->config->queue_qos0_messages){
 			if(!context->bridge){
-				printf("0.4 -------------------메시지 연결--------------- qos %d \n", qos);
+				//printf("0.4 -------------------메시지 연결--------------- qos %d \n", qos);
 				return 2;
 			}else{
 				if(context->bridge->start_type != bst_lazy){
-					printf("0.5 -------------------메시지 연결--------------- qos %d \n", qos);
+					//printf("0.5 -------------------메시지 연결--------------- qos %d \n", qos);
 					return 2;
 				}
 			}
 		}
 	}
-	printf("1 -------------------메시지 연결--------------- qos %d \n", qos);
+	//printf("1 -------------------메시지 연결--------------- qos %d \n", qos);
 	if(context->sock != INVALID_SOCKET){
-		if(qos == 0 || max_inflight == 0 || context->msg_count12 < max_inflight){
+		if(qos == 0 || qos == 3 || max_inflight == 0 || context->msg_count12 < max_inflight){
 			if(dir == mosq_md_out){
 				switch(qos){
 					case 0:
@@ -407,7 +405,7 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 						context->id);
 			}
 			return 2;
-			printf("2-------------------메시지 연결--------------- qos %d \n", qos);
+			//printf("2-------------------메시지 연결--------------- qos %d \n", qos);
 		}else{
 			state = mosq_ms_queued;
 		}
@@ -419,39 +417,51 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 		db->persistence_changes++;
 	}
 #endif
-	printf("3 -------------------메시지 연결--------------- qos %d \n",qos);
-	msg = _mosquitto_malloc(sizeof(struct mosquitto_client_msg));
-	if(!msg) return MOSQ_ERR_NOMEM;
-	msg->next = NULL;
-	msg->store = stored;
-	msg->store->ref_count++;
-	msg->mid = mid;
-	msg->timestamp = mosquitto_time();
-	msg->direction = dir;
-	msg->state = state;
-	msg->dup = false;
-	msg->qos = qos;
-	msg->retain = retain;
-	if(context->last_msg){
-		context->last_msg->next = msg;
-		context->last_msg = msg;
-	}else{
-		context->msgs = msg;
-		context->last_msg = msg;
+	//printf("3 -------------------메시지 연결--------------- qos %d \n", qos);
+	// 중요중요
+	if (qos != 3) {
+		msg = _mosquitto_malloc(sizeof(struct mosquitto_client_msg));
+		if (!msg) return MOSQ_ERR_NOMEM;
+		msg->next = NULL;
+		msg->store = stored;
+		msg->store->ref_count++;
+		msg->mid = mid;
+		msg->timestamp = mosquitto_time();
+		msg->direction = dir;
+		msg->state = state;
+		msg->dup = false;
+		if (qos != 3)
+			msg->qos = qos;
+		else
+			msg->qos = 0;
+		msg->retain = retain;
+
+		if (context->last_msg) {
+			context->last_msg->next = msg;
+			context->last_msg = msg;
+		}
+		else {
+			context->msgs = msg;
+			context->last_msg = msg;
+		}
+		context->msg_count++;
+		if (qos > 0 && qos != 3) {
+			context->msg_count12++;
+		}
 	}
-	context->msg_count++;
-	if(qos > 0){
-		context->msg_count12++;
+	if (qos == 3) {
+	//	_message_remove(db, context, &msg, NULL);
+		mosquitto__db_msg_store_deref(db, &stored);
 	}
 
-	if(db->config->allow_duplicate_messages == false && dir == mosq_md_out && retain == false){
-		/* Record which client ids this message has been sent to so we can avoid duplicates.
+	/*if(db->config->allow_duplicate_messages == false && dir == mosq_md_out && retain == false){
+		Record which client ids this message has been sent to so we can avoid duplicates.
 		 * Outgoing messages only.
 		 * If retain==true then this is a stale retained message and so should be
 		 * sent regardless. FIXME - this does mean retained messages will received
 		 * multiple times for overlapping subscriptions, although this is only the
 		 * case for SUBSCRIPTION with multiple subs in so is a minor concern.
-		 */
+		 
 		dest_ids = _mosquitto_realloc(stored->dest_ids, sizeof(char *)*(stored->dest_id_count+1));
 		if(dest_ids){
 			stored->dest_ids = dest_ids;
@@ -463,7 +473,8 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 		}else{
 			return MOSQ_ERR_NOMEM;
 		}
-	}
+	}*/
+
 #ifdef WITH_BRIDGE
 	if(context->bridge && context->bridge->start_type == bst_lazy
 			&& context->sock == INVALID_SOCKET
@@ -608,7 +619,7 @@ int mqtt3_db_message_store(struct mosquitto_db *db, const char *source, uint16_t
 	}else{
 		temp->db_id = store_id;
 	}
-
+	//중요중요중요
 	mosquitto__db_msg_store_add(db, temp);
 
 	return MOSQ_ERR_SUCCESS;
@@ -860,7 +871,6 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 			msg_count++;
 		}
 		if(tail->state != mosq_ms_queued){
-
 			mid = tail->mid;
 			retries = tail->dup;
 			retain = tail->retain;
@@ -873,17 +883,9 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 
 			switch(tail->state){ //packet handle send
 				case mosq_ms_publish_qos0:
-					if (context->urgency_val == 1) {
-						printf("@@@@@@@@@@@@@@@@@@@2 urgency val!!\n");
-						rc = 0;
-						context->urgency_val = 0; //다시 초기화
-					}
-					else {
-						printf("@@@@@@@@@@@@@@@@@@@2 왜 이럼 ??  \n");
-						rc = _mosquitto_send_publish(context, mid, topic, payloadlen, payload, qos, retain, retries);
-					}
+					rc = _mosquitto_send_publish(context, mid, topic, payloadlen, payload, qos, retain, retries);
 					if(!rc){
-						printf("normal remove = %d \n", rc);
+						printf("normal remove\n");
 						_message_remove(db, context, &tail, last);
 					}else{
 						return rc;
@@ -974,7 +976,6 @@ int highlight_db_message_write(element data) //수정
 {
 	struct mosquitto *context = data.head;
 	int rc;
-
 	data.qos = 0;
 
 	while (context) {
@@ -992,18 +993,17 @@ int highlight_db_message_write(element data) //수정
 		}
 
 		rc = _mosquitto_send_publish(context, data.mid, data.topic, data.payloadlen, data.payload, data.qos, data.retain, data.retain);
-		rc = 0;
 		if (!rc) {
-			context->urgency_val = 1; // 수정
-			printf("send 성공함!~~~~~~~~~~~~~~~~~~~~~\n");
-			printf("몇번 remove ?? \n");
+			//context->urgency_val = 1; // 수정
+			printf("urgency send 성공함!~~~~~~~~~~~~~~~~~~~~~\n");
 		}
 		else {
-			printf("send 실패 !?\n");
+			printf("urgency send 실패 !?\n");
 			return rc;
 		}
 		context = context->link;
 	}
+	
 	return MOSQ_ERR_SUCCESS;
 }
 

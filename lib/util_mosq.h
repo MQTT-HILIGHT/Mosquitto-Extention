@@ -42,6 +42,8 @@ FILE *_mosquitto_fopen(const char *path, const char *mode, bool restrict_read);
 * Highlight Code ¼öÁ¤
 */
 
+void highlight_log_print(char *str);
+
 typedef struct {
 	struct mosquitto *head;  //subscribe head ptr
 	char *payload;

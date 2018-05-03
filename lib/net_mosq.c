@@ -222,7 +222,6 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 #endif
 {
 	int rc = 0;
-
 	assert(mosq);
 #ifdef WITH_TLS
 	if(mosq->ssl){
@@ -261,7 +260,6 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 		mosq->listener = NULL;
 	}
 #endif
-
 	return rc;
 }
 

@@ -47,6 +47,13 @@ Contributors:
  * highlight code
  */
 
+void highlight_log_print(char *str) {
+	int k = 1;
+	if (k) {
+		printf("%s", str);
+	}
+}
+
 void highlight_init_queue(Queue *queue)
 {
 	queue->front = queue->rear = NULL; //front와 rear를 NULL로 설정
