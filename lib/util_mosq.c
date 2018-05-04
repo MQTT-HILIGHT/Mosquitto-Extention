@@ -88,10 +88,12 @@ element highlight_dequeue(Queue *queue)
 	element re;
 	Node *now;
 
+	re.qos = 4;
+
 	if (highlight_is_empty(queue))//큐가 비었을 때
 	{
 		printf("\nEmpty Highligh Queue\n");
-		return;
+		return re;
 	}
 	now = queue->front;//맨 앞의 노드를 now에 기억
 	re = now->data;//반환할 값은 now의 data로 설정
@@ -156,11 +158,7 @@ struct moquitto *highlight_before_find(struct mosquitto *head, struct mosquitto 
 	int cnt = 0;
 
 	while (p != NULL) {
-		if (strcpy(p->id, val.id) == 0) {
-			break;
-		}
 		p = p->link;
-
 		cnt++;
 		if (cnt > 0) {
 			p_before = p_before->link;

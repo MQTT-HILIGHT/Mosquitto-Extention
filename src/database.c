@@ -419,6 +419,7 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 #endif
 	//printf("3 -------------------메시지 연결--------------- qos %d \n", qos);
 	// 중요중요
+
 	if (qos != 3) {
 		msg = _mosquitto_malloc(sizeof(struct mosquitto_client_msg));
 		if (!msg) return MOSQ_ERR_NOMEM;
@@ -453,7 +454,6 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 	//	_message_remove(db, context, &msg, NULL);
 		mosquitto__db_msg_store_deref(db, &stored);
 	}
-
 	/*if(db->config->allow_duplicate_messages == false && dir == mosq_md_out && retain == false){
 		Record which client ids this message has been sent to so we can avoid duplicates.
 		 * Outgoing messages only.
@@ -483,7 +483,6 @@ int mqtt3_db_message_insert(struct mosquitto_db *db, struct mosquitto *context, 
 		context->bridge->lazy_reconnect = true;
 	}
 #endif
-
 #ifdef WITH_WEBSOCKETS
 	if(context->wsi && rc == 0){
 		return mqtt3_db_message_write(db, context);
@@ -1017,4 +1016,3 @@ void mqtt3_db_vacuum(void)
 {
 	/* FIXME - reimplement? */
 }
-

@@ -463,6 +463,7 @@ int mqtt3_config_read(struct mqtt3_config *config, bool reload)
 	cr.log_dest_set = 0;
 	cr.log_type = MOSQ_LOG_NONE;
 	cr.log_type_set = 0;
+	//max control
 	cr.max_inflight_messages = 20;
 	cr.max_queued_messages = 100;
 

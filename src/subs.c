@@ -146,28 +146,9 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 			}*/
 			//highlight_display(highlight_urgency_queue.rear->data.head);
 
-			//my_rand 수정!
-			/*if (old == NULL) {
-				old = leaf->context;
-			}
-			else {
-				if (strcmp(old->id, leaf->context->id) == 0) {
-					char my_rand[4];
-					srand(time(NULL));
-					my_rand[0] = rand() % 26 + 65;
-					my_rand[1] = rand() % 26 + 65;
-					my_rand[2] = rand() % 26 + 65;
-					my_rand[3] = '\0';
 
-					strcpy(leaf->context->id, my_rand);
 
-					printf("@@@@@@@@@@@@@@@ 말이 됨~??????????@@@@@@@@@@2\n");
-				}				
-			}
-			printf("old odl  ~~~~~~~~~~~~~~` leaf context-id %s     old context-id %s\n", leaf->context->id, old->id);
-			old = leaf->context;*/
-			//printf("밖에서~~~~~~~~~~~~~~` leaf context-id %s\n", leaf->context->id);
-			
+			//printf("밖에서~~~~~~~~~~~~~~` leaf context-id %s\n", leaf->context->id);		
 			if (mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, client_retain, stored) == 1) {
 				rc = 1;
 			}
@@ -458,6 +439,7 @@ static void _sub_search(struct mosquitto_db *db, struct _mosquitto_subhier *subh
 			 * there may still be other subscriptions to deal with.
 			 */
 			_subs_process(db, branch, source_id, topic, qos, retain, stored, false);
+			
 		}
 		branch = branch->next;
 	}
@@ -572,6 +554,7 @@ int mqtt3_db_messages_queue(struct mosquitto_db *db, const char *source_id, cons
 		}
 		subhier = subhier->next;
 	}
+
 	_sub_topic_tokens_free(tokens);
 
 	/* Remove our reference and free if needed. */

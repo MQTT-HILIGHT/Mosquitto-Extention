@@ -260,6 +260,7 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 		case 0:
 		case 3:
 			if(mqtt3_db_messages_queue(db, context->id, topic, qos, retain, &stored)) rc = 1;
+			
 			break;
 		case 1:
 			if(mqtt3_db_messages_queue(db, context->id, topic, qos, retain, &stored)) rc = 1;

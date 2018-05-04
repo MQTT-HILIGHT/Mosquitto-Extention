@@ -168,7 +168,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 
 		my_control_count = 0; //수정
 
-		//Sleep(2000); //수정
+		Sleep(2000); //수정
 
 		//printf("시작  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 		if (highlight_urgency_queue.count != 0) {
@@ -182,6 +182,11 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			}
 
 			if (highlight_db_message_write(data) == MOSQ_ERR_SUCCESS) {
+				if (data.topic)
+					free(data.topic);
+				if (data.payload)
+					free(data.payload);
+				// 메모리 정리
 				printf("성공!\n");
 			}
 			printf("\n---------------- urgency send 끝 ----------------\n");
