@@ -218,28 +218,30 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBLISH from %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
 
 
-	//enqueue 수정  @@
-
-	element data;
-	
-	data.head = NULL;  //head 포인터 초기화
-
-	data.payload = (char *)malloc(sizeof(char)*payloadlen + 1);
-	data.topic = (char *)malloc(sizeof(char)*strlen(topic) + 1);
-	strcpy(data.payload, payload);
-	strcpy(data.topic, topic);
-
-	data.dup = dup;
-	data.mid = mid;
-	data.qos = qos;
-	data.retain = retain;
-	data.payloadlen = payloadlen;
-
 	if (qos == 3) {		
-		highlight_enqueue(&highlight_urgency_queue, data); //urgency queue 에 넣음
+
+		//enqueue 수정  @@
+		element data;
+
+		data.head = NULL;  //head 포인터 초기화
+		
+		data.payload = _mosquitto_malloc(sizeof(char)*payloadlen + 1);
+		data.topic = _mosquitto_malloc(sizeof(char)*strlen(topic) + 1);
+		strcpy(data.payload, payload);
+		strcpy(data.topic, topic);
+
+		data.dup = dup;
+		data.mid = mid;
+		data.qos = qos;
+		data.retain = retain;
+		data.payloadlen = payloadlen;
+
+		hilight_enqueue(&hilight_urgency_queue, data); //urgency queue 에 넣음
 	}
+
+
 	/*else { //normal queue
-		highlight_enqueue(&highlight_normal_queue, data);
+		hilight_enqueue(&hilight_normal_queue, data);
 	}*/
 
 	if(qos > 0 && qos != 3){

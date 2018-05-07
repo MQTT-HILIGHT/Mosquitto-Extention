@@ -39,10 +39,8 @@ uint16_t _mosquitto_mid_generate(struct mosquitto *mosq);
 FILE *_mosquitto_fopen(const char *path, const char *mode, bool restrict_read);
 
 /*
-* Highlight Code 수정
+* hilight Code 수정
 */
-
-void highlight_log_print(char *str);
 
 typedef struct {
 	struct mosquitto *head;  //subscribe head ptr
@@ -69,21 +67,21 @@ typedef struct Queue //Queue 구조체 정의
 	int count;   //보관 개수
 }Queue;
 
-void highlight_init_queue(Queue *queue);
-int highlight_is_empty(Queue *queue);
-void highlight_enqueue(Queue *queue, element data);
-void highlight_last_element_insert_subscribe(Queue *queue, struct mosquitto *context);
-element highlight_dequeue(Queue *queue);
+void hilight_init_queue(Queue *queue);
+int hilight_is_empty(Queue *queue);
+void hilight_enqueue(Queue *queue, element data);
+void hilight_last_element_insert_subscribe(Queue *queue, struct mosquitto *context);
+element hilight_dequeue(Queue *queue);
 
 //sub list
-void highlight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node);
-void highlight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *removed);
-void highlight_display(struct mosquitto *head);
-struct moquitto *highlight_find(struct mosquitto *head, struct mosquitto val);
-struct moquitto *highlight_before_find(struct mosquitto *head, struct mosquitto val);
+void hilight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node);
+void hilight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *removed);
+void hilight_display(struct mosquitto *head);
+struct moquitto *hilight_find(struct mosquitto *head, struct mosquitto val);
+struct moquitto *hilight_before_find(struct mosquitto *head, struct mosquitto val);
 
-Queue highlight_urgency_queue;
-Queue highlight_normal_queue;
+Queue hilight_urgency_queue;
+Queue hilight_normal_queue;
 int my_control_count; //control
 
 #ifdef REAL_WITH_TLS_PSK

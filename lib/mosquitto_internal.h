@@ -155,7 +155,7 @@ struct mosquitto {
 #ifndef WITH_BROKER
 	mosq_sock_t sockpairR, sockpairW;
 #endif
-	//highlight code 수정
+	//hilight code 수정
 	struct mosquitto *link;
 	int urgency_val;
 

@@ -14,6 +14,9 @@ Contributors:
    Roger Light - initial implementation and documentation.
 */
 
+
+#define _DUMMYPTHREAD_H_ //수정 스레드
+
 #include <config.h>
 
 #ifndef WIN32
@@ -35,6 +38,8 @@ Contributors:
 #ifndef WIN32
 #  include <sys/time.h>
 #endif
+
+#include <pthread.h> //수정 스레드
 
 #include <errno.h>
 #include <signal.h>
@@ -211,6 +216,12 @@ void handle_sigusr2(int signal)
 	flag_tree_print = true;
 }
 
+void hilight_send_queue() { //수정 스레드
+	printf("------------------- HILIGHT send queue thread start! -------------------\n");
+
+
+}
+
 int main(int argc, char *argv[])
 {
 	mosq_sock_t *listensock = NULL;
@@ -224,6 +235,7 @@ int main(int argc, char *argv[])
 	FILE *pid;
 	int listener_max;
 	int rc;
+	pthread_t thread_t;// 수정 스레드
 #ifdef WIN32
 	SYSTEMTIME st;
 #else
@@ -231,7 +243,7 @@ int main(int argc, char *argv[])
 #endif
 	struct mosquitto *ctxt, *ctxt_tmp;
 
-	highlight_init_queue(&highlight_urgency_queue); //highlight queue init control
+	hilight_init_queue(&hilight_urgency_queue); //hilight queue init control
 
 #if defined(WIN32) || defined(__CYGWIN__)
 	if(argc == 2){
@@ -265,6 +277,9 @@ int main(int argc, char *argv[])
 	rc = mqtt3_config_parse_args(&config, argc, argv);
 	if(rc != MOSQ_ERR_SUCCESS) return rc;
 	int_db.config = &config;
+
+	// 수정 스레드
+	pthread_create(&thread_t, NULL, hilight_send_queue, NULL);
 
 	if(config.daemon){
 		mosquitto__daemonise();

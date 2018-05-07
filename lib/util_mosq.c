@@ -44,34 +44,27 @@ Contributors:
 #endif
 
 /*
- * highlight code
+ * hilight code
  */
 
-void highlight_log_print(char *str) {
-	int k = 1;
-	if (k) {
-		printf("%s", str);
-	}
-}
-
-void highlight_init_queue(Queue *queue)
+void hilight_init_queue(Queue *queue)
 {
 	queue->front = queue->rear = NULL; //front와 rear를 NULL로 설정
 	queue->count = 0;//보관 개수를 0으로 설정
 }
 
-int highlight_is_empty(Queue *queue)
+int hilight_is_empty(Queue *queue)
 {
 	return queue->count == 0;    //보관 개수가 0이면 빈 상태
 }
 
-void highlight_enqueue(Queue *queue, element data)
+void hilight_enqueue(Queue *queue, element data)
 {
 	Node *now = (Node *)malloc(sizeof(Node)); //노드 생성
 	now->data = data;//데이터 설정
 	now->next = NULL;
 
-	if (highlight_is_empty(queue))//큐가 비어있을 때
+	if (hilight_is_empty(queue))//큐가 비어있을 때
 	{
 		queue->front = now;//맨 앞을 now로 설정       
 	}
@@ -83,14 +76,14 @@ void highlight_enqueue(Queue *queue, element data)
 	queue->count++;//보관 개수를 1 증가
 }
 
-element highlight_dequeue(Queue *queue)
+element hilight_dequeue(Queue *queue)
 {
 	element re;
 	Node *now;
 
 	re.qos = 4;
 
-	if (highlight_is_empty(queue))//큐가 비었을 때
+	if (hilight_is_empty(queue))//큐가 비었을 때
 	{
 		printf("\nEmpty Highligh Queue\n");
 		return re;
@@ -106,7 +99,7 @@ element highlight_dequeue(Queue *queue)
 }
 
 //sub list
-void highlight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node) {
+void hilight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node) {
 
 	if (*phead == NULL) {
 		new_node->link = NULL;
@@ -122,11 +115,11 @@ void highlight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct
 	}
 }
 
-void highlight_last_element_insert_subscribe(Queue *queue, struct mosquitto *context) {
-	highlight_insert_node(&queue->rear->data.head, highlight_before_find(queue->rear->data.head, *context), context);
+void hilight_last_element_insert_subscribe(Queue *queue, struct mosquitto *context) {
+	hilight_insert_node(&queue->rear->data.head, hilight_before_find(queue->rear->data.head, *context), context);
 }
 
-void highlight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *removed) {
+void hilight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *removed) {
 	if (p == NULL) {
 		*phead = (*phead)->link;
 	}
@@ -135,14 +128,14 @@ void highlight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct
 	}
 	//free(removed); //수정
 }
-void highlight_display(struct mosquitto *head) {
+void hilight_display(struct mosquitto *head) {
 	struct mosquitto *p = head;
 	while (p != NULL) {
 		printf("display command state : %d\n",((p->in_packet.command) & 0xF0));
 		p = p->link;
 	}
 }
-struct moquitto *highlight_find(struct mosquitto *head, struct mosquitto val) {
+struct moquitto *hilight_find(struct mosquitto *head, struct mosquitto val) {
 	struct mosquitto *p = head;
 	while (p != NULL) {
 		if ( strcpy(p->id, val.id) == 0 ) {
@@ -152,7 +145,7 @@ struct moquitto *highlight_find(struct mosquitto *head, struct mosquitto val) {
 	}
 	return p;
 }
-struct moquitto *highlight_before_find(struct mosquitto *head, struct mosquitto val) {
+struct moquitto *hilight_before_find(struct mosquitto *head, struct mosquitto val) {
 	struct mosquitto *p = head;
 	struct mosquitto *p_before = head;
 	int cnt = 0;

@@ -971,7 +971,7 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int highlight_db_message_write(element data) //수정
+int hilight_db_message_write(element data) //수정
 {
 	struct mosquitto *context = data.head;
 	int rc;
@@ -979,8 +979,8 @@ int highlight_db_message_write(element data) //수정
 
 	while (context) {
 
-//		printf("highlight context message count---------- %d \n", context->msg_count);
-//		printf("highlight context message count 12---------- %d \n", context->msg_count12);
+//		printf("hilight context message count---------- %d \n", context->msg_count);
+//		printf("hilight context message count 12---------- %d \n", context->msg_count12);
 
 		if (!context || context->sock == INVALID_SOCKET
 			|| (context->state == mosq_cs_connected && !context->id)) {

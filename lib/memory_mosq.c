@@ -33,7 +33,7 @@ Contributors:
 #endif
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-static unsigned long memcount = 0;
+static unsigned long  memcount = 0;
 static unsigned long max_memcount = 0;
 #endif
 
@@ -42,7 +42,8 @@ void *_mosquitto_calloc(size_t nmemb, size_t size)
 	void *mem = calloc(nmemb, size);
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-	memcount += malloc_usable_size(mem);
+	//memcount += malloc_usable_size(mem);
+	memcount += sizeof(mem);
 	if(memcount > max_memcount){
 		max_memcount = memcount;
 	}
@@ -57,7 +58,8 @@ void _mosquitto_free(void *mem)
 	if(!mem){
 		return;
 	}
-	memcount -= malloc_usable_size(mem);
+//	memcount -= malloc_usable_size(mem);
+	memcount -= sizeof(mem);
 #endif
 	free(mem);
 }
@@ -67,10 +69,13 @@ void *_mosquitto_malloc(size_t size)
 	void *mem = malloc(size);
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-	memcount += malloc_usable_size(mem);
+//	memcount += malloc_usable_size(mem);
+	memcount += sizeof(mem);
 	if(memcount > max_memcount){
 		max_memcount = memcount;
 	}
+	printf("static unsigned long memcount = %lf mb\n", (double)memcount/1024);
+	//printf("static unsigned long max_memcount = %d mb\n", memcount/1024);
 #endif
 
 	return mem;
@@ -93,13 +98,15 @@ void *_mosquitto_realloc(void *ptr, size_t size)
 	void *mem;
 #ifdef REAL_WITH_MEMORY_TRACKING
 	if(ptr){
-		memcount -= malloc_usable_size(ptr);
+//		memcount -= malloc_usable_size(ptr);
+		memcount -= sizeof(ptr);
 	}
 #endif
 	mem = realloc(ptr, size);
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-	memcount += malloc_usable_size(mem);
+	memcount += sizeof(mem);
+//	memcount += malloc_usable_size(mem);
 	if(memcount > max_memcount){
 		max_memcount = memcount;
 	}
@@ -113,7 +120,8 @@ char *_mosquitto_strdup(const char *s)
 	char *str = strdup(s);
 
 #ifdef REAL_WITH_MEMORY_TRACKING
-	memcount += malloc_usable_size(str);
+	memcount += sizeof(str);
+//	memcount += malloc_usable_size(str);
 	if(memcount > max_memcount){
 		max_memcount = memcount;
 	}

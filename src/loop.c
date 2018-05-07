@@ -117,7 +117,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	time_t last_timeout_check = 0;
 	char *id;
 
-	int highlight_count = 0; //수정
+	int hilight_count = 0; //수정
 	element data;
 	int my_count;
 
@@ -168,26 +168,24 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 
 		my_control_count = 0; //수정
 
-		Sleep(2000); //수정
+		//Sleep(2000); //수정
 
 		//printf("시작  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-		if (highlight_urgency_queue.count != 0) {
-			printf("My Urgency Queue 갯 수 : %d\n", highlight_urgency_queue.count);
+		if (hilight_urgency_queue.count != 0) {
+			printf("My Urgency Queue 갯 수 : %d\n", hilight_urgency_queue.count);
 		}
 
-		for (my_count = 0; my_count < highlight_urgency_queue.count; my_count++) { //my urgency
+		for (my_count = 0; my_count < hilight_urgency_queue.count; my_count++) { //my urgency
 			printf("---------------- urgency send 시작 ----------------\n");
-			if (!highlight_is_empty(&highlight_urgency_queue)) {
-				data = highlight_dequeue(&highlight_urgency_queue);
+			if (!hilight_is_empty(&hilight_urgency_queue)) {
+				data = hilight_dequeue(&hilight_urgency_queue);
 			}
 
-			if (highlight_db_message_write(data) == MOSQ_ERR_SUCCESS) {
-				if (data.topic)
-					free(data.topic);
-				if (data.payload)
-					free(data.payload);
+			if (hilight_db_message_write(data) == MOSQ_ERR_SUCCESS) {
+				_mosquitto_free(data.topic);
+				_mosquitto_free(data.payload);
 				// 메모리 정리
-				printf("성공!\n");
+				printf("메모리 성공!\n");
 			}
 			printf("\n---------------- urgency send 끝 ----------------\n");
 		}
