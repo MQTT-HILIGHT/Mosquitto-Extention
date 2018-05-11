@@ -25,8 +25,8 @@ Contributors:
 #include <time_mosq.h>
 #include "util_mosq.h"
 
-static int max_inflight = 20;
-static int max_queued = 100;
+static int max_inflight = 20; //20 max 수정
+static int max_queued = 100; //100 max 수정
 #ifdef WITH_SYS_TREE
 extern unsigned long g_msgs_dropped;
 #endif
@@ -860,8 +860,6 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 		return MOSQ_ERR_SUCCESS;
 	}
 
-//	printf("normal context message count---------- %d \n", context->msg_count);
-//	printf("normal context message count 12---------- %d \n", context->msg_count12);
 
 	tail = context->msgs;
 	
@@ -884,7 +882,7 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 				case mosq_ms_publish_qos0:
 					rc = _mosquitto_send_publish(context, mid, topic, payloadlen, payload, qos, retain, retries);
 					if(!rc){
-						printf("normal remove\n");
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "normal remove\n");
 						_message_remove(db, context, &tail, last);
 					}else{
 						return rc;
@@ -968,41 +966,6 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 		}
 	}
 
-	return MOSQ_ERR_SUCCESS;
-}
-
-int hilight_db_message_write(element data) //수정
-{
-	struct mosquitto *context = data.head;
-	int rc;
-	data.qos = 0;
-
-	while (context) {
-
-//		printf("hilight context message count---------- %d \n", context->msg_count);
-//		printf("hilight context message count 12---------- %d \n", context->msg_count12);
-
-		if (!context || context->sock == INVALID_SOCKET
-			|| (context->state == mosq_cs_connected && !context->id)) {
-			return MOSQ_ERR_INVAL;
-		}
-
-		if (context->state != mosq_cs_connected) {
-			return MOSQ_ERR_SUCCESS;
-		}
-
-		rc = _mosquitto_send_publish(context, data.mid, data.topic, data.payloadlen, data.payload, data.qos, data.retain, data.retain);
-		if (!rc) {
-			//context->urgency_val = 1; // 수정
-			printf("urgency send 성공함!~~~~~~~~~~~~~~~~~~~~~\n");
-		}
-		else {
-			printf("urgency send 실패 !?\n");
-			return rc;
-		}
-		context = context->link;
-	}
-	
 	return MOSQ_ERR_SUCCESS;
 }
 

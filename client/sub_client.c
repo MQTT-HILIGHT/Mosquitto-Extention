@@ -30,6 +30,10 @@ Contributors:
 #include <mosquitto.h>
 #include "client_shared.h"
 
+#ifndef HILIGHT_TIME
+#include <time.h>
+#endif
+
 bool process_messages = true;
 int msg_count = 0;
 
@@ -68,6 +72,11 @@ void my_message_callback(struct mosquitto *mosq, void *obj, const struct mosquit
 	}else{
 		if(message->payloadlen){
 			fwrite(message->payload, 1, message->payloadlen, stdout);
+#ifndef HILIGHT_TIME
+			time_t t = time(NULL);
+			struct tm tm = *localtime(&t);
+			printf(" time: %d:%d:%d\n", tm.tm_hour, tm.tm_min, tm.tm_sec);
+#endif
 			if(cfg->eol){
 				printf("\n");
 			}

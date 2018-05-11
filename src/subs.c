@@ -112,7 +112,7 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 			if(db->config->upgrade_outgoing_qos){
 				msg_qos = client_qos;
 			}else{
-				if(qos != 3 && qos > client_qos){
+				if(qos != 3 && qos < client_qos){
 					msg_qos = client_qos;
 				}
 				else if (qos == 3) { //수정
@@ -147,8 +147,6 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 			//hilight_display(hilight_urgency_queue.rear->data.head);
 
 
-
-			//printf("밖에서~~~~~~~~~~~~~~` leaf context-id %s\n", leaf->context->id);		
 			if (mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, client_retain, stored) == 1) {
 				rc = 1;
 			}

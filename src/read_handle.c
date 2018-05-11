@@ -51,20 +51,15 @@ int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context) //br
 		case PUBREL:
 			return _mosquitto_handle_pubrel(db, context);
 		case CONNECT:
-			//printf("connect\n"); //이미 연결된 클라이언트를 init? 해주는 부분 만약 연결이 애매하다면 여기서 계속 connack을 보냄
 			return mqtt3_handle_connect(db, context); 
 		case DISCONNECT:
-			//printf("disconnect\n");
 			return mqtt3_handle_disconnect(db, context);
 		case SUBSCRIBE:
-			//printf("subscribe\n");
 			return mqtt3_handle_subscribe(db, context);
 		case UNSUBSCRIBE:
-			//printf("unsubscribe\n");
 			return mqtt3_handle_unsubscribe(db, context);
 #ifdef WITH_BRIDGE
 		case CONNACK:
-			//printf("connack\n");
 			return mqtt3_handle_connack(db, context);
 		case SUBACK:
 			return _mosquitto_handle_suback(context);
@@ -223,7 +218,9 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 		//enqueue 수정  @@
 		element data;
 
-		data.head = NULL;  //head 포인터 초기화
+		data._linked_list_mosquitto.head = NULL;  //data에 있는 연결리스트 초기화
+		data._linked_list_mosquitto.tail = NULL;
+		data._linked_list_mosquitto.node_len = 0;
 		
 		data.payload = _mosquitto_malloc(sizeof(char)*payloadlen + 1);
 		data.topic = _mosquitto_malloc(sizeof(char)*strlen(topic) + 1);

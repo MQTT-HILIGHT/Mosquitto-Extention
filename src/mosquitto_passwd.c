@@ -25,6 +25,7 @@ Contributors:
 #include <string.h>
 #ifdef WIN32
 #  include <process.h>
+#  include <Windows.h>
 #	ifndef __cplusplus
 #		define bool char
 #		define true 1

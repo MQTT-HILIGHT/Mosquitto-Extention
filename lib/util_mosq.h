@@ -41,9 +41,15 @@ FILE *_mosquitto_fopen(const char *path, const char *mode, bool restrict_read);
 /*
 * hilight Code 수정
 */
+#ifdef WITH_BROKER // 전부다 broker code 임!
+typedef struct linked_list_mosquitto{
+	struct mosquitto *head;
+	struct mosquitto *tail;
+	int node_len;
+}linked_list_mosquitto;
 
 typedef struct {
-	struct mosquitto *head;  //subscribe head ptr
+	linked_list_mosquitto _linked_list_mosquitto;  //subscribe head ptr
 	char *payload;
 	char *topic;
 	int8_t retain;
@@ -75,14 +81,23 @@ element hilight_dequeue(Queue *queue);
 
 //sub list
 void hilight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node);
+void hilight_insert_last_node(linked_list_mosquitto *_linked_list_mosquitto, struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node);
 void hilight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *removed);
 void hilight_display(struct mosquitto *head);
 struct moquitto *hilight_find(struct mosquitto *head, struct mosquitto val);
 struct moquitto *hilight_before_find(struct mosquitto *head, struct mosquitto val);
 
+
+//consumer
+void hilight_send_data();
+int hilight_db_message_write(element data);
+
 Queue hilight_urgency_queue;
 Queue hilight_normal_queue;
 int my_control_count; //control
+
+#endif
+
 
 #ifdef REAL_WITH_TLS_PSK
 int _mosquitto_hex2bin(const char *hex, unsigned char *bin, int bin_max_len);

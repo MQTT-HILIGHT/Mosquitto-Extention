@@ -47,6 +47,7 @@ Contributors:
  * hilight code
  */
 
+#ifdef WITH_BROKER  // 전부다 broker code 임!
 void hilight_init_queue(Queue *queue)
 {
 	queue->front = queue->rear = NULL; //front와 rear를 NULL로 설정
@@ -105,7 +106,7 @@ void hilight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct m
 		new_node->link = NULL;
 		*phead = new_node;
 	}
-	else if (p == NULL) {
+	else if (p == NULL) { //들어올 일 없음 항상 뒤에다 넣기 때문에
 		new_node->link = *phead;
 		*phead = new_node;
 	}
@@ -114,11 +115,28 @@ void hilight_insert_node(struct mosquitto **phead, struct mosquitto *p, struct m
 		p->link = new_node;
 	}
 }
+void hilight_insert_last_node(linked_list_mosquitto *_linked_list_mosquitto, struct mosquitto **phead, struct mosquitto *p, struct mosquitto *new_node){
 
-void hilight_last_element_insert_subscribe(Queue *queue, struct mosquitto *context) {
-	hilight_insert_node(&queue->rear->data.head, hilight_before_find(queue->rear->data.head, *context), context);
+	if (*phead == NULL) {
+		new_node->link = NULL;
+		*phead = new_node;
+	}
+	else if (p == NULL) { //들어올 일 없음 항상 뒤에다 넣기 때문에
+		new_node->link = *phead;
+		*phead = new_node;
+	}
+	else {
+		new_node->link = p->link;
+		p->link = new_node;
+	}
+
+	_linked_list_mosquitto->tail = new_node; //tail은 항상! 마지막
 }
-
+void hilight_last_element_insert_subscribe(Queue *queue, struct mosquitto *context) {
+	hilight_insert_last_node(&queue->rear->data._linked_list_mosquitto, &queue->rear->data._linked_list_mosquitto.head, 
+		queue->rear->data._linked_list_mosquitto.tail, context); //맨 뒤에다가 넣음
+	queue->rear->data._linked_list_mosquitto.node_len++; //node 갯 수 증가
+}
 void hilight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct mosquitto *removed) {
 	if (p == NULL) {
 		*phead = (*phead)->link;
@@ -160,6 +178,60 @@ struct moquitto *hilight_before_find(struct mosquitto *head, struct mosquitto va
 	return p_before;
 }
 
+
+//consumer
+void hilight_send_data() {
+	int i;
+	element data;
+
+	if (hilight_urgency_queue.count != 0) {
+		printf("My Urgency Queue 갯 수 : %d\n", hilight_urgency_queue.count);
+	}
+
+	for (i = 0; i < hilight_urgency_queue.count; i++) { //my urgency
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "---------------- urgency send 시작 ----------------\n");
+		if (!hilight_is_empty(&hilight_urgency_queue)) {
+			data = hilight_dequeue(&hilight_urgency_queue);
+		}
+
+		if (hilight_db_message_write(data) == MOSQ_ERR_SUCCESS) {
+			_mosquitto_free(data.topic);
+			_mosquitto_free(data.payload);
+		}
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "\n---------------- urgency send 끝 ----------------\n");
+	}
+}
+int hilight_db_message_write(element data) //수정
+{
+	struct mosquitto *context = data._linked_list_mosquitto.head;
+	int rc;
+	data.qos = 0;
+
+	while (context) {
+
+		if (!context || context->sock == INVALID_SOCKET
+			|| (context->state == mosq_cs_connected && !context->id)) {
+			return MOSQ_ERR_INVAL;
+		}
+
+		if (context->state != mosq_cs_connected) {
+			return MOSQ_ERR_SUCCESS;
+		}
+
+		rc = _mosquitto_send_publish(context, data.mid, data.topic, data.payloadlen, data.payload, data.qos, data.retain, data.retain);
+		if (!rc) {
+			_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "urgency send 성공함!~~~~~~~~~~~~~~~~~~~~~\n");
+		}
+		else {
+			_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "urgency send 실패 !?\n");
+			return rc;
+		}
+		context = context->link;
+	}
+
+	return MOSQ_ERR_SUCCESS;
+}
+#endif
 
 
 int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
