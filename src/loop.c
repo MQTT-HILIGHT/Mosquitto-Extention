@@ -127,7 +127,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 #endif
 
 #ifdef WIN32
-	pollfd_max = _getmaxstdio();// _getmaxstdio();   max 수정
+	pollfd_max =10000;// _getmaxstdio();   max 수정
 #else
 	pollfd_max = getdtablesize();
 #endif
@@ -141,8 +141,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	if(db->config->persistent_client_expiration > 0){
 		expiration_check_time = time(NULL) + 3600;
 	}
-
+	//int cntcnt = 0;
 	while(run) { //진짜 메인 loop 스타트!
+
+		//printf("%d\n", cntcnt++);
 
 		mosquitto__free_disused_contexts(db);
 #ifdef WITH_SYS_TREE
@@ -232,7 +234,7 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 			}
 		} //write hash end
 		if (my_control_count != 0) {
-			printf("보내야 할 Publish Message 갯 수(Queue * subs_count) : %d\n", my_control_count);
+			_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "보내야 할 Publish Message 갯 수(Queue * subs_count) : %d", my_control_count);
 		}
 //		printf("끝  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 

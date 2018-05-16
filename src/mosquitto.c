@@ -389,6 +389,7 @@ int main(int argc, char *argv[])
 	//¾Æ·¡ Âß close
 
 	_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
+
 	mqtt3_log_close(&config);
 
 #ifdef WITH_WEBSOCKETS

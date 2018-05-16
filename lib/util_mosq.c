@@ -149,7 +149,7 @@ void hilight_remove_node(struct mosquitto **phead, struct mosquitto *p, struct m
 void hilight_display(struct mosquitto *head) {
 	struct mosquitto *p = head;
 	while (p != NULL) {
-		printf("display command state : %d\n",((p->in_packet.command) & 0xF0));
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "display command state : %d",((p->in_packet.command) & 0xF0));
 		p = p->link;
 	}
 }
@@ -185,11 +185,11 @@ void hilight_send_data() {
 	element data;
 
 	if (hilight_urgency_queue.count != 0) {
-		printf("My Urgency Queue 갯 수 : %d\n", hilight_urgency_queue.count);
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "My Urgency Queue 갯 수 : %d", hilight_urgency_queue.count);
 	}
 
 	for (i = 0; i < hilight_urgency_queue.count; i++) { //my urgency
-		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "---------------- urgency send 시작 ----------------\n");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "---------------- urgency send 시작 ----------------");
 		if (!hilight_is_empty(&hilight_urgency_queue)) {
 			data = hilight_dequeue(&hilight_urgency_queue);
 		}
@@ -198,7 +198,7 @@ void hilight_send_data() {
 			_mosquitto_free(data.topic);
 			_mosquitto_free(data.payload);
 		}
-		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "\n---------------- urgency send 끝 ----------------\n");
+		_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "---------------- urgency send 끝 ----------------");
 	}
 }
 int hilight_db_message_write(element data) //수정
@@ -220,10 +220,10 @@ int hilight_db_message_write(element data) //수정
 
 		rc = _mosquitto_send_publish(context, data.mid, data.topic, data.payloadlen, data.payload, data.qos, data.retain, data.retain);
 		if (!rc) {
-			_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "urgency send 성공함!~~~~~~~~~~~~~~~~~~~~~\n");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "urgency send 성공");
 		}
 		else {
-			_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "urgency send 실패 !?\n");
+			_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "urgency send 실패");
 			return rc;
 		}
 		context = context->link;
@@ -231,9 +231,37 @@ int hilight_db_message_write(element data) //수정
 
 	return MOSQ_ERR_SUCCESS;
 }
+
+
+//log
+void _hilight_system_log(struct mosquitto *mosq, const char *fmt, ...) {
+	va_list va;
+	int rc;
+
+	va_start(va, fmt);
+	hilight_system_log(mosq, fmt, va);
+	va_end(va);
+}
+
+void hilight_system_log(struct mosquitto *mosq, const char *fmt, va_list va) {
+	int len;
+	char *s;
+
+	len = strlen(fmt) + 500;
+	s = _mosquitto_malloc(len * sizeof(char));
+	if (!s) return;
+
+	vsnprintf(s, len, fmt, va);
+	s[len - 1] = '\0';
+	mqtt3_db_messages_easy_queue(_mosquitto_get_db(), mosq, "$SYS/broker/hilight/log", 0, strlen(s) + 1, s, 0);
+	_mosquitto_free(s);
+}
+
 #endif
 
 
+
+// mosquitto code
 int _mosquitto_packet_alloc(struct _mosquitto_packet *packet)
 {
 	uint8_t remaining_bytes[5], byte;

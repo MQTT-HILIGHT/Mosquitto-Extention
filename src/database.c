@@ -25,8 +25,8 @@ Contributors:
 #include <time_mosq.h>
 #include "util_mosq.h"
 
-static int max_inflight = 20; //20 max 수정
-static int max_queued = 100; //100 max 수정
+static int max_inflight = 200000; //20 max 수정
+static int max_queued = 1000000; //100 max 수정
 #ifdef WITH_SYS_TREE
 extern unsigned long g_msgs_dropped;
 #endif
@@ -882,7 +882,7 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context)
 				case mosq_ms_publish_qos0:
 					rc = _mosquitto_send_publish(context, mid, topic, payloadlen, payload, qos, retain, retries);
 					if(!rc){
-						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "normal remove\n");
+						_mosquitto_log_printf(NULL, MOSQ_LOG_NOTICE, "normal remove");
 						_message_remove(db, context, &tail, last);
 					}else{
 						return rc;

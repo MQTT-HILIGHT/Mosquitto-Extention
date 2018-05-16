@@ -212,8 +212,15 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received PUBLISH from %s (d%d, q%d, r%d, m%d, '%s', ... (%ld bytes))", context->id, dup, qos, retain, mid, topic, (long)payloadlen);
 
+#ifndef HILIGHT_LOG`
+	_hilight_system_log(NULL, "R P %s %d %s", context->id, qos, topic);
+#endif
 
-	if (qos == 3) {		
+	if (payload == NULL || payloadlen == 0) {
+		goto process_bad_message;
+	}
+
+	if (qos == 3) {
 
 		//enqueue 수정  @@
 		element data;
@@ -235,7 +242,6 @@ int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context)
 
 		hilight_enqueue(&hilight_urgency_queue, data); //urgency queue 에 넣음
 	}
-
 
 	/*else { //normal queue
 		hilight_enqueue(&hilight_normal_queue, data);

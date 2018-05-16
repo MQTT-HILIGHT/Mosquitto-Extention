@@ -101,7 +101,7 @@ int mqtt3_log_close(struct mqtt3_config *config)
 	return MOSQ_ERR_SUCCESS;
 }
 
-int _mosquitto_log_vprintf(struct mosquitto *mosq, int priority, const char *fmt, va_list va)
+int _mosquitto_log_vprintf(struct mosquitto *mosq, int priority, const char *fmt, va_list va) //log 수정
 {
 	char *s;
 	char *st;
@@ -197,6 +197,9 @@ int _mosquitto_log_vprintf(struct mosquitto *mosq, int priority, const char *fmt
 		vsnprintf(s, len, fmt, va);
 		s[len-1] = '\0'; /* Ensure string is null terminated. */
 
+		//mqtt3_db_messages_easy_queue(_mosquitto_get_db(), mosq, "$SYS/broker/hilight/log", 0, strlen(s) + 1, s, 0);
+		//log 수정
+
 		if(log_destinations & MQTT3_LOG_STDOUT){
 			if(int_db.config && int_db.config->log_timestamp){
 				fprintf(stdout, "%d: %s\n", (int)now, s);
@@ -253,7 +256,7 @@ int _mosquitto_log_vprintf(struct mosquitto *mosq, int priority, const char *fmt
 	return MOSQ_ERR_SUCCESS;
 }
 
-int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt, ...)
+int _mosquitto_log_printf(struct mosquitto *mosq, int priority, const char *fmt, ...) //log 수정
 {
 	va_list va;
 	int rc;

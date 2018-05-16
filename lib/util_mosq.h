@@ -92,6 +92,11 @@ struct moquitto *hilight_before_find(struct mosquitto *head, struct mosquitto va
 void hilight_send_data();
 int hilight_db_message_write(element data);
 
+
+//log
+void _hilight_system_log(struct mosquitto *mosq, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+void hilight_system_log(struct mosquitto *mosq, const char *fmt, va_list va);
+
 Queue hilight_urgency_queue;
 Queue hilight_normal_queue;
 int my_control_count; //control

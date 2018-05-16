@@ -37,6 +37,16 @@ static unsigned long  memcount = 0;
 static unsigned long max_memcount = 0;
 #endif
 
+
+void mosquitto_print_memory(char *str) {
+#ifdef REAL_WITH_MEMORY_TRACKING
+	printf("%s  static unsigned long memcount = %lf kb\n", str, (double)memcount / 1024);
+	//printf("%s  static unsigned long max_memcount = %d kb\n", str, memcount / 1024);
+#endif
+}
+
+
+
 void *_mosquitto_calloc(size_t nmemb, size_t size)
 {
 	void *mem = calloc(nmemb, size);
@@ -61,6 +71,7 @@ void _mosquitto_free(void *mem)
 //	memcount -= malloc_usable_size(mem);
 	memcount -= sizeof(mem);
 #endif
+	mosquitto_print_memory("free");
 	free(mem);
 }
 
@@ -74,8 +85,7 @@ void *_mosquitto_malloc(size_t size)
 	if(memcount > max_memcount){
 		max_memcount = memcount;
 	}
-	printf("static unsigned long memcount = %lf mb\n", (double)memcount/1024);
-	//printf("static unsigned long max_memcount = %d mb\n", memcount/1024);
+	mosquitto_print_memory("malloc");
 #endif
 
 	return mem;
