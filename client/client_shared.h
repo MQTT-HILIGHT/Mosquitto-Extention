@@ -30,9 +30,6 @@ Contributors:
 #define CLIENT_PUB 1
 #define CLIENT_SUB 2
 
-/* hilight time function! */
-#define HILIGHT_TIME 12345
-
 struct mosq_config {
 	char *id;
 	char *id_prefix;

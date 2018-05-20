@@ -43,14 +43,12 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 		case PUBCOMP:
 			return _mosquitto_handle_pubackcomp(mosq, "PUBCOMP");
 		case PUBLISH:
-			//printf("publish\n");
 			return _mosquitto_handle_publish(mosq);
 		case PUBREC:
 			return _mosquitto_handle_pubrec(mosq);
 		case PUBREL:
 			return _mosquitto_handle_pubrel(NULL, mosq);
 		case CONNACK:
-			//printf("connack\n");
 			return _mosquitto_handle_connack(mosq);
 		case SUBACK:
 			return _mosquitto_handle_suback(mosq);
@@ -63,7 +61,7 @@ int _mosquitto_packet_handle(struct mosquitto *mosq)
 	}
 }
 
-int _mosquitto_handle_publish(struct mosquitto *mosq) 
+int _mosquitto_handle_publish(struct mosquitto *mosq)
 {
 	uint8_t header;
 	struct mosquitto_message_all *message;
@@ -120,9 +118,8 @@ int _mosquitto_handle_publish(struct mosquitto *mosq)
 			(long)message->msg.payloadlen);
 
 	message->timestamp = mosquitto_time();
-	switch(message->msg.qos){//qos control
+	switch(message->msg.qos){
 		case 0:
-		case 3:
 			pthread_mutex_lock(&mosq->callback_mutex);
 			if(mosq->on_message){
 				mosq->in_callback = true;

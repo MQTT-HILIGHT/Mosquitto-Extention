@@ -107,7 +107,7 @@ int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock)
 	g_socket_connections++;
 #endif
 
-	if(_mosquitto_socket_nonblock(new_sock)){  //nonblock 모드 설정!!
+	if(_mosquitto_socket_nonblock(new_sock)){
 		return INVALID_SOCKET;
 	}
 
@@ -124,13 +124,11 @@ int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock)
 		return -1;
 	}
 #endif
-	new_context = mqtt3_context_init(db, new_sock);  //context init
+	new_context = mqtt3_context_init(db, new_sock);
 	if(!new_context){
 		COMPAT_CLOSE(new_sock);
 		return -1;
 	}
-
-	//client_count++
 	for(i=0; i<db->config->listener_count; i++){
 		for(j=0; j<db->config->listeners[i].sock_count; j++){
 			if(db->config->listeners[i].socks[j] == listensock){
@@ -140,8 +138,6 @@ int mqtt3_socket_accept(struct mosquitto_db *db, mosq_sock_t listensock)
 			}
 		}
 	}
-	
-	//client_count 검증
 	if(!new_context->listener){
 		mqtt3_context_cleanup(db, new_context, true);
 		return -1;

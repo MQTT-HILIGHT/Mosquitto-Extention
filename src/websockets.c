@@ -48,6 +48,7 @@ extern unsigned long g_pub_msgs_received;
 extern unsigned long g_pub_msgs_sent;
 #endif
 extern struct mosquitto_db int_db;
+extern struct mosquitto_db int_db2;
 
 #if defined(LWS_LIBRARY_VERSION_NUMBER)
 static int callback_mqtt(
@@ -392,7 +393,7 @@ static int callback_mqtt(struct libwebsocket_context *context,
 
 	return 0;
 }
-
+//수정수정수정
 
 #if defined(LWS_LIBRARY_VERSION_NUMBER)
 static int callback_http(
@@ -416,7 +417,7 @@ static int callback_http(struct libwebsocket_context *context,
 	unsigned char buf[4096];
 	struct stat filestat;
 	struct mosquitto_db *db = &int_db;
-	struct mosquitto *mosq;
+	struct mosquitto *mosq;	
 	struct lws_pollargs *pollargs = (struct lws_pollargs *)in;
 
 	/* FIXME - ssl cert verification is done here. */

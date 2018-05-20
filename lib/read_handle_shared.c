@@ -83,8 +83,6 @@ int _mosquitto_handle_pubackcomp(struct mosquitto *mosq, const char *type)
 
 	if(!_mosquitto_message_delete(mosq, mid, mosq_md_out)){
 		/* Only inform the client the message has been sent once. */
-		
-		
 		pthread_mutex_lock(&mosq->callback_mutex);
 		if(mosq->on_publish){
 			mosq->in_callback = true;

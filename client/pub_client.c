@@ -62,7 +62,7 @@ void my_connect_callback(struct mosquitto *mosq, void *obj, int result)
 			case MSGMODE_CMD:
 			case MSGMODE_FILE:
 			case MSGMODE_STDIN_FILE:
-				rc = mosquitto_publish(mosq, &mid_sent, topic, msglen, message, qos, retain); //qos control
+				rc = mosquitto_publish(mosq, &mid_sent, topic, msglen, message, qos, retain);
 				break;
 			case MSGMODE_NULL:
 				rc = mosquitto_publish(mosq, &mid_sent, topic, 0, NULL, qos, retain);
@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
 	if(client_opts_set(mosq, &cfg)){
 		return 1;
 	}
-	rc = client_connect(mosq, &cfg); //여기서 클라이언트 커넥함
+	rc = client_connect(mosq, &cfg);
 	if(rc) return rc;
 
 	if(mode == MSGMODE_STDIN_LINE){
@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
 			}
 			rc = MOSQ_ERR_SUCCESS;
 		}else{
-			rc = mosquitto_loop(mosq, -1, 1); //여기서 callback 불림	
+			rc = mosquitto_loop(mosq, -1, 1);
 		}
 	}while(rc == MOSQ_ERR_SUCCESS && connected);
 

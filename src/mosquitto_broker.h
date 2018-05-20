@@ -359,7 +359,9 @@ struct libws_mqtt_data {
  * Main functions
  * ============================================================ */
 int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max);
+int hilight_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int listensock_count, int listener_max); //수정
 struct mosquitto_db *_mosquitto_get_db(void);
+struct mosquitto_db *_mosquitto_get_db2(void);
 
 /* ============================================================
  * Config functions
@@ -396,10 +398,12 @@ int _mosquitto_socket_get_address(mosq_sock_t sock, char *buf, int len);
  * Read handling functions
  * ============================================================ */
 int mqtt3_packet_handle(struct mosquitto_db *db, struct mosquitto *context);
+int mqtt3_hilight_packet_handle(struct mosquitto_db *db, struct mosquitto *context); //수정
 int mqtt3_handle_connack(struct mosquitto_db *db, struct mosquitto *context);
 int mqtt3_handle_connect(struct mosquitto_db *db, struct mosquitto *context);
 int mqtt3_handle_disconnect(struct mosquitto_db *db, struct mosquitto *context);
 int mqtt3_handle_publish(struct mosquitto_db *db, struct mosquitto *context);
+int mqtt3_hilight_handle_publish(struct mosquitto_db *db, struct mosquitto *context); //수정
 int mqtt3_handle_subscribe(struct mosquitto_db *db, struct mosquitto *context);
 int mqtt3_handle_unsubscribe(struct mosquitto_db *db, struct mosquitto *context);
 
@@ -423,6 +427,7 @@ int mqtt3_db_message_write(struct mosquitto_db *db, struct mosquitto *context);
 int mqtt3_db_messages_delete(struct mosquitto_db *db, struct mosquitto *context);
 int mqtt3_db_messages_easy_queue(struct mosquitto_db *db, struct mosquitto *context, const char *topic, int qos, uint32_t payloadlen, const void *payload, int retain);
 int mqtt3_db_messages_queue(struct mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store **stored);
+int mqtt3_hilight_db_messages_queue(struct mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store **stored);//수정
 int mqtt3_db_message_store(struct mosquitto_db *db, const char *source, uint16_t source_mid, const char *topic, int qos, uint32_t payloadlen, const void *payload, int retain, struct mosquitto_msg_store **stored, dbid_t store_id);
 int mqtt3_db_message_store_find(struct mosquitto *context, uint16_t mid, struct mosquitto_msg_store **stored);
 void mosquitto__db_msg_store_add(struct mosquitto_db *db, struct mosquitto_msg_store *store);

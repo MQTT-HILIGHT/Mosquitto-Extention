@@ -161,17 +161,6 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 
 	packet->next = NULL;
 	pthread_mutex_lock(&mosq->out_packet_mutex);
-	struct _mosquitto_packet *temp = packet;
-
-	// payload control
-	if (temp != NULL) {
-		while (temp) {
-			//printf("Command Ãâ·Â %u\n", temp->command);
-			temp = temp->next;
-		}
-	}
-	// payload control
-
 	if(mosq->out_packet){
 		mosq->out_packet_last->next = packet;
 	}else{
@@ -199,7 +188,7 @@ int _mosquitto_packet_queue(struct mosquitto *mosq, struct _mosquitto_packet *pa
 		if(write(mosq->sockpairW, &sockpair_data, 1)){
 		}
 #else
-		send(mosq->sockpairW, &sockpair_data, 1, 0);  //send control
+		send(mosq->sockpairW, &sockpair_data, 1, 0);
 #endif
 	}
 
@@ -222,6 +211,7 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 #endif
 {
 	int rc = 0;
+
 	assert(mosq);
 #ifdef WITH_TLS
 	if(mosq->ssl){
@@ -260,6 +250,7 @@ int _mosquitto_socket_close(struct mosquitto *mosq)
 		mosq->listener = NULL;
 	}
 #endif
+
 	return rc;
 }
 
@@ -863,12 +854,12 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 {
 	ssize_t write_length;
 	struct _mosquitto_packet *packet;
+
 	if(!mosq) return MOSQ_ERR_INVAL;
 	if(mosq->sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
 
 	pthread_mutex_lock(&mosq->current_out_packet_mutex);
 	pthread_mutex_lock(&mosq->out_packet_mutex);
-
 	if(mosq->out_packet && !mosq->current_out_packet){
 		mosq->current_out_packet = mosq->out_packet;
 		mosq->out_packet = mosq->out_packet->next;
@@ -921,9 +912,7 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 		}
 #  endif
 #else
-
-		//qos control
-		if(((packet->command)&0xF6) == PUBLISH || ((packet->command) == 54)){
+		if(((packet->command)&0xF6) == PUBLISH){
 			pthread_mutex_lock(&mosq->callback_mutex);
 			if(mosq->on_publish){
 				/* This is a QoS=0 message */
@@ -995,7 +984,7 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 #ifdef WITH_BROKER
 int _mosquitto_packet_read(struct mosquitto_db *db, struct mosquitto *mosq)
 #else
-int _mosquitto_packet_read(struct mosquitto *mosq)  //packet control
+int _mosquitto_packet_read(struct mosquitto *mosq)
 #endif
 {
 	uint8_t byte;
@@ -1145,9 +1134,9 @@ int _mosquitto_packet_read(struct mosquitto *mosq)  //packet control
 		g_pub_msgs_received++;
 	}
 #  endif
-	rc = mqtt3_packet_handle(db, mosq);  //packet handle broker
+	rc = mqtt3_packet_handle(db, mosq);
 #else
-	rc = _mosquitto_packet_handle(mosq); //packet handle mosquitto
+	rc = _mosquitto_packet_handle(mosq);
 #endif
 
 	/* Free data and reset values */
@@ -1158,6 +1147,183 @@ int _mosquitto_packet_read(struct mosquitto *mosq)  //packet control
 	pthread_mutex_unlock(&mosq->msgtime_mutex);
 	return rc;
 }
+
+
+#ifdef WITH_BROKER
+int _hilight_packet_read(struct mosquitto_db *db, struct mosquitto *mosq)
+#else
+int _hilight_packet_read(struct mosquitto *mosq)
+#endif
+{
+	uint8_t byte;
+	ssize_t read_length;
+	int rc = 0;
+
+	if (!mosq) return MOSQ_ERR_INVAL;
+	if (mosq->sock == INVALID_SOCKET) return MOSQ_ERR_NO_CONN;
+	if (mosq->state == mosq_cs_connect_pending) {
+		return MOSQ_ERR_SUCCESS;
+	}
+
+	/* This gets called if pselect() indicates that there is network data
+	* available - ie. at least one byte.  What we do depends on what data we
+	* already have.
+	* If we've not got a command, attempt to read one and save it. This should
+	* always work because it's only a single byte.
+	* Then try to read the remaining length. This may fail because it is may
+	* be more than one byte - will need to save data pending next read if it
+	* does fail.
+	* Then try to read the remaining payload, where 'payload' here means the
+	* combined variable header and actual payload. This is the most likely to
+	* fail due to longer length, so save current data and current position.
+	* After all data is read, send to _mosquitto_handle_packet() to deal with.
+	* Finally, free the memory and reset everything to starting conditions.
+	*/
+	if (!mosq->in_packet.command) {
+		read_length = _mosquitto_net_read(mosq, &byte, 1);
+		if (read_length == 1) {
+			mosq->in_packet.command = byte;
+#ifdef WITH_BROKER
+#  ifdef WITH_SYS_TREE
+			g_bytes_received++;
+#  endif
+			/* Clients must send CONNECT as their first command. */
+			if (!(mosq->bridge) && mosq->state == mosq_cs_new && (byte & 0xF0) != CONNECT) return MOSQ_ERR_PROTOCOL;
+#endif
+		}
+		else {
+			if (read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
+#ifdef WIN32
+			errno = WSAGetLastError();
+#endif
+			if (errno == EAGAIN || errno == COMPAT_EWOULDBLOCK) {
+				return MOSQ_ERR_SUCCESS;
+			}
+			else {
+				switch (errno) {
+				case COMPAT_ECONNRESET:
+					return MOSQ_ERR_CONN_LOST;
+				default:
+					return MOSQ_ERR_ERRNO;
+				}
+			}
+		}
+	}
+	/* remaining_count is the number of bytes that the remaining_length
+	* parameter occupied in this incoming packet. We don't use it here as such
+	* (it is used when allocating an outgoing packet), but we must be able to
+	* determine whether all of the remaining_length parameter has been read.
+	* remaining_count has three states here:
+	*   0 means that we haven't read any remaining_length bytes
+	*   <0 means we have read some remaining_length bytes but haven't finished
+	*   >0 means we have finished reading the remaining_length bytes.
+	*/
+	if (mosq->in_packet.remaining_count <= 0) {
+		do {
+			read_length = _mosquitto_net_read(mosq, &byte, 1);
+			if (read_length == 1) {
+				mosq->in_packet.remaining_count--;
+				/* Max 4 bytes length for remaining length as defined by protocol.
+				* Anything more likely means a broken/malicious client.
+				*/
+				if (mosq->in_packet.remaining_count < -4) return MOSQ_ERR_PROTOCOL;
+
+#if defined(WITH_BROKER) && defined(WITH_SYS_TREE)
+				g_bytes_received++;
+#endif
+				mosq->in_packet.remaining_length += (byte & 127) * mosq->in_packet.remaining_mult;
+				mosq->in_packet.remaining_mult *= 128;
+			}
+			else {
+				if (read_length == 0) return MOSQ_ERR_CONN_LOST; /* EOF */
+#ifdef WIN32
+				errno = WSAGetLastError();
+#endif
+				if (errno == EAGAIN || errno == COMPAT_EWOULDBLOCK) {
+					return MOSQ_ERR_SUCCESS;
+				}
+				else {
+					switch (errno) {
+					case COMPAT_ECONNRESET:
+						return MOSQ_ERR_CONN_LOST;
+					default:
+						return MOSQ_ERR_ERRNO;
+					}
+				}
+			}
+		} while ((byte & 128) != 0);
+		/* We have finished reading remaining_length, so make remaining_count
+		* positive. */
+		mosq->in_packet.remaining_count *= -1;
+
+		if (mosq->in_packet.remaining_length > 0) {
+			mosq->in_packet.payload = _mosquitto_malloc(mosq->in_packet.remaining_length * sizeof(uint8_t));
+			if (!mosq->in_packet.payload) return MOSQ_ERR_NOMEM;
+			mosq->in_packet.to_process = mosq->in_packet.remaining_length;
+		}
+	}
+	while (mosq->in_packet.to_process>0) {
+		read_length = _mosquitto_net_read(mosq, &(mosq->in_packet.payload[mosq->in_packet.pos]), mosq->in_packet.to_process);
+		if (read_length > 0) {
+#if defined(WITH_BROKER) && defined(WITH_SYS_TREE)
+			g_bytes_received += read_length;
+#endif
+			mosq->in_packet.to_process -= read_length;
+			mosq->in_packet.pos += read_length;
+		}
+		else {
+#ifdef WIN32
+			errno = WSAGetLastError();
+#endif
+			if (errno == EAGAIN || errno == COMPAT_EWOULDBLOCK) {
+				if (mosq->in_packet.to_process > 1000) {
+					/* Update last_msg_in time if more than 1000 bytes left to
+					* receive. Helps when receiving large messages.
+					* This is an arbitrary limit, but with some consideration.
+					* If a client can't send 1000 bytes in a second it
+					* probably shouldn't be using a 1 second keep alive. */
+					pthread_mutex_lock(&mosq->msgtime_mutex);
+					mosq->last_msg_in = mosquitto_time();
+					pthread_mutex_unlock(&mosq->msgtime_mutex);
+				}
+				return MOSQ_ERR_SUCCESS;
+			}
+			else {
+				switch (errno) {
+				case COMPAT_ECONNRESET:
+					return MOSQ_ERR_CONN_LOST;
+				default:
+					return MOSQ_ERR_ERRNO;
+				}
+			}
+		}
+	}
+
+	/* All data for this packet is read. */
+	mosq->in_packet.pos = 0;
+#ifdef WITH_BROKER
+#  ifdef WITH_SYS_TREE
+	g_msgs_received++;
+	if (((mosq->in_packet.command) & 0xF5) == PUBLISH) {
+		g_pub_msgs_received++;
+	}
+#  endif
+	rc = mqtt3_hilight_packet_handle(db, mosq);
+#else
+	rc = _mosquitto_packet_handle(mosq);
+#endif
+
+	/* Free data and reset values */
+	_mosquitto_packet_cleanup(&mosq->in_packet);
+
+	pthread_mutex_lock(&mosq->msgtime_mutex);
+	mosq->last_msg_in = mosquitto_time();
+	pthread_mutex_unlock(&mosq->msgtime_mutex);
+	return rc;
+}
+
+
+
 
 int _mosquitto_socket_nonblock(mosq_sock_t sock)
 {

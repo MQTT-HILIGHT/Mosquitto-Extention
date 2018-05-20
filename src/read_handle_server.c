@@ -95,7 +95,6 @@ int mqtt3_handle_connect(struct mosquitto_db *db, struct mosquitto *context)
 	int slen;
 	struct _mosquitto_subleaf *leaf;
 	int i;
-
 #ifdef WITH_TLS
 	X509 *client_cert = NULL;
 	X509_NAME *name;
@@ -182,7 +181,6 @@ int mqtt3_handle_connect(struct mosquitto_db *db, struct mosquitto *context)
 	clean_session = (connect_flags & 0x02) >> 1;
 	will = connect_flags & 0x04;
 	will_qos = (connect_flags & 0x18) >> 3;
-	//qos control
 	if(will_qos == 3){
 		_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "Invalid Will QoS in CONNECT from %s.",
 				context->address);
@@ -631,6 +629,11 @@ int mqtt3_handle_subscribe(struct mosquitto_db *db, struct mosquitto *context)
 	uint32_t payloadlen = 0;
 	int len;
 	char *sub_mount;
+
+	if (db != _mosquitto_get_db()) {
+		printf("subscribe db change\n");
+		db = _mosquitto_get_db();
+	}
 
 	if(!context) return MOSQ_ERR_INVAL;
 	_mosquitto_log_printf(NULL, MOSQ_LOG_DEBUG, "Received SUBSCRIBE from %s", context->id);

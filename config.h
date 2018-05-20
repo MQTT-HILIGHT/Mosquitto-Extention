@@ -13,10 +13,8 @@
  * ============================================================ */
 #if defined(_MSC_VER) && _MSC_VER < 1900
 //#  define snprintf sprintf_s
-//#  define EPROTO ECONNABORTED
+#  define EPROTO ECONNABORTED
 #endif
-
-#define HAVE_STRUCT_TIMESPEC
 
 #ifdef WIN32
 #  ifndef strcasecmp

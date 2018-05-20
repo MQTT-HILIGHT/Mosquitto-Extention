@@ -12,9 +12,6 @@ and the Eclipse Distribution License is available at
  
 Contributors:
    Roger Light - initial implementation and documentation.
-
-   ºê¸´Áö ¼³¸í!
-   http://www.steves-internet-guide.com/mosquitto-bridge-configuration/
 */
 
 #include <assert.h>

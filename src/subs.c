@@ -60,6 +60,102 @@ struct _sub_token {
 	char *topic;
 };
 
+
+static int _hilight_subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hier, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored, bool set_retain)
+{
+	int rc = 0;
+	int rc2;
+	int client_qos, msg_qos;
+	uint16_t mid;
+	struct _mosquitto_subleaf *leaf;
+	bool client_retain;
+
+	leaf = hier->subs;
+
+	if (retain && set_retain) {
+#ifdef WITH_PERSISTENCE
+		if (strncmp(topic, "$SYS", 4)) {
+			/* Retained messages count as a persistence change, but only if
+			* they aren't for $SYS. */
+			db->persistence_changes++;
+		}
+#endif
+		if (hier->retained) {
+			mosquitto__db_msg_store_deref(db, &hier->retained);
+#ifdef WITH_SYS_TREE
+			db->retained_count--;
+#endif
+		}
+		if (stored->payloadlen) {
+			hier->retained = stored;
+			hier->retained->ref_count++;
+#ifdef WITH_SYS_TREE
+			db->retained_count++;
+#endif
+		}
+		else {
+			hier->retained = NULL;
+		}
+	}
+	while (source_id && leaf) {
+		if (!leaf->context->id || (leaf->context->is_bridge && !strcmp(leaf->context->id, source_id))) {
+			leaf = leaf->next;
+			continue;
+		}
+		/* Check for ACL topic access. */
+		rc2 = mosquitto_acl_check(db, leaf->context, topic, MOSQ_ACL_READ);
+		if (rc2 == MOSQ_ERR_ACL_DENIED) {
+			leaf = leaf->next;
+			continue;
+		}
+		else if (rc2 == MOSQ_ERR_SUCCESS) {
+			client_qos = leaf->qos;
+
+			if (db->config->upgrade_outgoing_qos) {
+				msg_qos = client_qos;
+			}
+			else {
+				if (qos > client_qos) {
+					msg_qos = client_qos;
+				}
+				else {
+					msg_qos = qos;
+				}
+			}
+			if (msg_qos) {
+				mid = _mosquitto_mid_generate(leaf->context);
+			}
+			else {
+				mid = 0;
+			}
+			if (leaf->context->is_bridge) {
+				/* If we know the client is a bridge then we should set retain
+				* even if the message is fresh. If we don't do this, retained
+				* messages won't be propagated. */
+				client_retain = retain;
+			}
+			else {
+				/* Client is not a bridge and this isn't a stale message so
+				* retain should be false. */
+				client_retain = false;
+			}
+
+			//printf("------------------- Hilight 연결리스트 연결!  ---------------------\n");
+			hilight_last_element_insert_subscribe(&hilight_urgency_queue, leaf->context);
+
+			//수정! 이거 아마 지워도 될 듯? 일반 context msg에 달지 않는 것임!
+			//if (mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, client_retain, stored) == 1) rc = 1;
+
+		}
+		else {
+			return 1; /* Application error */
+		}
+		leaf = leaf->next;
+	}
+
+	return rc;
+}
+
 static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hier, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored, bool set_retain)
 {
 	int rc = 0;
@@ -68,7 +164,6 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 	uint16_t mid;
 	struct _mosquitto_subleaf *leaf;
 	bool client_retain;
-	struct mosquitto *old = NULL;
 
 	leaf = hier->subs;
 
@@ -112,17 +207,13 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 			if(db->config->upgrade_outgoing_qos){
 				msg_qos = client_qos;
 			}else{
-				if(qos != 3 && qos < client_qos){
+				if(qos > client_qos){
 					msg_qos = client_qos;
-				}
-				else if (qos == 3) { //수정
-					msg_qos = 3;
-				}
-				else{
+				}else{
 					msg_qos = qos;
 				}
 			}
-			if(msg_qos && msg_qos != 3){
+			if(msg_qos){
 				mid = _mosquitto_mid_generate(leaf->context);
 			}else{
 				mid = 0;
@@ -137,24 +228,14 @@ static int _subs_process(struct mosquitto_db *db, struct _mosquitto_subhier *hie
 				 * retain should be false. */
 				client_retain = false;
 			}
-			//수정 연결리스트
-			if (qos == 3) {
-				hilight_last_element_insert_subscribe(&hilight_urgency_queue, leaf->context);
-			}
-			/*else {
-				hilight_last_element_insert_subscribe(&hilight_normal_queue, leaf->context);
-			}*/
-			//hilight_display(hilight_urgency_queue.rear->data.head);
 
-
-			if (mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, client_retain, stored) == 1) {
-				rc = 1;
-			}
+			if(mqtt3_db_message_insert(db, leaf->context, mid, mosq_md_out, msg_qos, client_retain, stored) == 1) rc = 1;
 		}else{
 			return 1; /* Application error */
 		}
 		leaf = leaf->next;
 	}
+
 	return rc;
 }
 
@@ -410,6 +491,41 @@ static int _sub_remove(struct mosquitto_db *db, struct mosquitto *context, struc
 	return MOSQ_ERR_SUCCESS;
 }
 
+
+static void _hilight_sub_search(struct mosquitto_db *db, struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored, bool set_retain)
+{
+	/* FIXME - need to take into account source_id if the client is a bridge */
+	struct _mosquitto_subhier *branch;
+	bool sr;
+
+	branch = subhier->children;
+	while (branch) {
+		sr = set_retain;
+
+		if (tokens && tokens->topic && (!strcmp(branch->topic, tokens->topic) || !strcmp(branch->topic, "+"))) {
+			/* The topic matches this subscription.
+			* Doesn't include # wildcards */
+			if (!strcmp(branch->topic, "+")) {
+				/* Don't set a retained message where + is in the hierarchy. */
+				sr = false;
+			}
+			_hilight_sub_search(db, branch, tokens->next, source_id, topic, qos, retain, stored, sr);
+			if (!tokens->next) {
+				_hilight_subs_process(db, branch, source_id, topic, qos, retain, stored, sr);
+			}
+		}
+		else if (!strcmp(branch->topic, "#") && !branch->children) {
+			/* The topic matches due to a # wildcard - process the
+			* subscriptions but *don't* return. Although this branch has ended
+			* there may still be other subscriptions to deal with.
+			*/
+			_hilight_subs_process(db, branch, source_id, topic, qos, retain, stored, false);
+		}
+		branch = branch->next;
+	}
+}
+
+
 static void _sub_search(struct mosquitto_db *db, struct _mosquitto_subhier *subhier, struct _sub_token *tokens, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store *stored, bool set_retain)
 {
 	/* FIXME - need to take into account source_id if the client is a bridge */
@@ -437,7 +553,6 @@ static void _sub_search(struct mosquitto_db *db, struct _mosquitto_subhier *subh
 			 * there may still be other subscriptions to deal with.
 			 */
 			_subs_process(db, branch, source_id, topic, qos, retain, stored, false);
-			
 		}
 		branch = branch->next;
 	}
@@ -522,6 +637,47 @@ int mqtt3_sub_remove(struct mosquitto_db *db, struct mosquitto *context, const c
 	return rc;
 }
 
+
+int mqtt3_hilight_db_messages_queue(struct mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store **stored)
+{
+	int rc = 0;
+	struct _mosquitto_subhier *subhier;
+	struct _sub_token *tokens = NULL;
+
+	assert(db);
+	assert(topic);
+
+	if (_sub_topic_tokenise(topic, &tokens)) return 1;
+
+	/* Protect this message until we have sent it to all
+	clients - this is required because websockets client calls
+	mqtt3_db_message_write(), which could remove the message if ref_count==0.
+	*/
+	(*stored)->ref_count++;
+
+	subhier = db->subs.children;
+	while (subhier) {
+		if (!strcmp(subhier->topic, tokens->topic)) {
+			if (retain) {
+				/* We have a message that needs to be retained, so ensure that the subscription
+				* tree for its topic exists.
+				*/
+				_sub_add(db, NULL, 0, subhier, tokens);
+			}
+			_hilight_sub_search(db, subhier, tokens, source_id, topic, qos, retain, *stored, true);
+		}
+		subhier = subhier->next;
+	}
+	_sub_topic_tokens_free(tokens);
+
+	/* Remove our reference and free if needed. */
+	mosquitto__db_msg_store_deref(db, stored);
+
+	return rc;
+}
+
+
+
 int mqtt3_db_messages_queue(struct mosquitto_db *db, const char *source_id, const char *topic, int qos, int retain, struct mosquitto_msg_store **stored)
 {
 	int rc = 0;
@@ -552,7 +708,6 @@ int mqtt3_db_messages_queue(struct mosquitto_db *db, const char *source_id, cons
 		}
 		subhier = subhier->next;
 	}
-
 	_sub_topic_tokens_free(tokens);
 
 	/* Remove our reference and free if needed. */
