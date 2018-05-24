@@ -472,6 +472,7 @@ int mqtt3_config_read(struct mqtt3_config *config, bool reload)
 		/* Re-initialise appropriate config vars to default for reload. */
 		_config_init_reload(config);
 	}
+
 	rc = _config_read_file(config, reload, config->config_file, &cr, 0, &lineno);
 	if(rc){
 		_mosquitto_log_printf(NULL, MOSQ_LOG_ERR, "Error found at %s:%d.", config->config_file, lineno);
@@ -1096,7 +1097,7 @@ int _config_read_file_core(struct mqtt3_config *config, bool reload, const char 
 						cur_listener = &config->listeners[config->listener_count-1];
 						memset(cur_listener, 0, sizeof(struct _mqtt3_listener));
 						cur_listener->protocol = mp_mqtt;
-						cur_listener->port = tmp_int;
+						cur_listener->port = tmp_int + config->config_id; //수정수정수정
 						token = strtok_r(NULL, "", &saveptr);
 						if(token){
 							cur_listener->host = _mosquitto_strdup(token);
@@ -1389,7 +1390,7 @@ int _config_read_file_core(struct mqtt3_config *config, bool reload, const char 
 					if(_conf_parse_string(&token, "pid_file", &config->pid_file, saveptr)) return MOSQ_ERR_INVAL;
 				}else if(!strcmp(token, "port")){
 					if(reload) continue; // Listener not valid for reloading.
-					if(config->default_listener.port){
+					if(config->default_listener.port){ 
 						_mosquitto_log_printf(NULL, MOSQ_LOG_WARNING, "Warning: Default listener port specified multiple times. Only the latest will be used.");
 					}
 					if(_conf_parse_int(&token, "port", &tmp_int, saveptr)) return MOSQ_ERR_INVAL;

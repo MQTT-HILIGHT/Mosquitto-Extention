@@ -101,6 +101,7 @@ struct _mqtt3_listener {
 };
 
 struct mqtt3_config {
+	int config_id; //¼öÁ¤
 	char *config_file;
 	char *acl_file;
 	bool allow_anonymous;

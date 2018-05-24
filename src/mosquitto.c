@@ -299,6 +299,7 @@ int main(int argc, char *argv[])
 	_mosquitto_net_init();
 
 	mqtt3_config_init(&config);
+	config.config_id = 0; //수정수정수정
 	rc = mqtt3_config_parse_args(&config, argc, argv);
 	if(rc != MOSQ_ERR_SUCCESS) return rc;
 	int_db.config = &config;
@@ -554,21 +555,29 @@ int hilight_main(void *param) {
 
 	//스레드
 	int cnt = 0;
-	loop_param->argv = (char **)_mosquitto_realloc(loop_param->argv, sizeof(char *)*(loop_param->argc + 2));
-	for (i = loop_param->argc; i < loop_param->argc + 2; i++) {
-		if (cnt == 0) {
-			loop_param->argv[i] = (char *)_mosquitto_malloc(sizeof(char)*strlen("-p") + 1);
-			strcpy(loop_param->argv[i], "-p");
-		}
-		else {
-			loop_param->argv[i] = (char *)_mosquitto_malloc(sizeof(char)*strlen("1884") + 1);
-			strcpy(loop_param->argv[i], "1884");
-		}
-		cnt++;
+	for (i = 0; i < loop_param->argc; i++) {
+		if (strcmp(loop_param->argv[i], "-c") == 0) {
+			cnt = 3;
+			break;
+		}		
 	}
-	loop_param->argc += 2;
+	if (cnt != 3) {
+		loop_param->argv = (char **)_mosquitto_realloc(loop_param->argv, sizeof(char *)*(loop_param->argc + 2));
+		for (i = loop_param->argc; i < loop_param->argc + 2; i++) {
+			if (cnt == 0) {
+				loop_param->argv[i] = (char *)_mosquitto_malloc(sizeof(char)*strlen("-p") + 1);
+				strcpy(loop_param->argv[i], "-p");
+			}
+			else {
+				loop_param->argv[i] = (char *)_mosquitto_malloc(sizeof(char)*strlen("1884") + 1);
+				strcpy(loop_param->argv[i], "1884");
+			}
+			cnt++;
+		}
+		loop_param->argc += 2;
+	}
 	/*for (i = 0; i < loop_param->argc; i++) {
-	printf("param 확인 : %s\n", loop_param->argv[i]);
+		printf("param 확인 : %s\n", loop_param->argv[i]);
 	}*/
 
 
@@ -603,6 +612,7 @@ int hilight_main(void *param) {
 	_mosquitto_net_init();
 
 	mqtt3_config_init(&config);
+	config.config_id = 1; //수정수정수정
 	rc = mqtt3_config_parse_args(&config, loop_param->argc, loop_param->argv);
 
 	if (rc != MOSQ_ERR_SUCCESS) return rc;
@@ -732,11 +742,12 @@ int hilight_main(void *param) {
 	rc = hilight_main_loop(&int_db2, listensock, listensock_count, listener_max); //main loop 시작
 
 	//스레드
-	for (i = loop_param->argc; i < loop_param->argc + 2; i++) {
+	for (i = loop_param->argc; i < loop_param->argc; i++) {
 		free(loop_param->argv[i]);
 	}
 	free(loop_param->argv);
 	_mosquitto_free(loop_param);
+
 
 	_mosquitto_log_printf(NULL, MOSQ_LOG_INFO, "mosquitto version %s terminating", VERSION);
 	mqtt3_log_close(&config);
