@@ -272,6 +272,9 @@ static int callback_mqtt(struct libwebsocket_context *context,
 					packet->pos += LWS_SEND_BUFFER_PRE_PADDING;
 				}
 				count = libwebsocket_write(wsi, &packet->payload[packet->pos], packet->to_process, LWS_WRITE_BINARY);
+				if (count >30 && packet->to_process > 30 && count == packet->to_process) { //수정수정수정
+					g_pub_msgs_sent++;
+				}
 #ifdef LWS_IS_OLD
 				/* lws < 1.3 doesn't return a valid count, assume everything sent. */
 				count = packet->to_process;

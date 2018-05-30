@@ -26,8 +26,8 @@ Contributors:
 
 #include <util_mosq.h> //지워야 됨 수정
 
-static int max_inflight = 200; //max control 20
-static int max_queued = 1000; //max control 100
+static int max_inflight = 250; //max control 20
+static int max_queued = 1500; //max control 100
 #ifdef WITH_SYS_TREE
 extern unsigned long g_msgs_dropped;
 #endif

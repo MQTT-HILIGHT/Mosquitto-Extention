@@ -903,7 +903,6 @@ int _mosquitto_packet_write(struct mosquitto *mosq)
 				}
 			}
 		}
-
 #ifdef WITH_BROKER
 #  ifdef WITH_SYS_TREE
 		g_msgs_sent++;

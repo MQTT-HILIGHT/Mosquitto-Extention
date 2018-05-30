@@ -54,6 +54,10 @@ extern bool flag_tree_print;
 extern int run;
 #ifdef WITH_SYS_TREE
 extern int g_clients_expired;
+extern unsigned long g_pub_msgs_received;
+extern unsigned long g_pub_msgs_sent;
+extern unsigned int connected_count;
+extern unsigned long g_msgs_dropped;
 #endif
 
 static void loop_handle_reads_writes(struct mosquitto_db *db, struct pollfd *pollfds);
@@ -116,6 +120,10 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 	time_t expiration_check_time = 0;
 	time_t last_timeout_check = 0;
 	char *id;
+	char buf[10];
+	time_t tmp_time;
+	time_t workload_msg_time = time(NULL);
+	
 
 #ifndef WIN32
 	sigemptyset(&sigblock);
@@ -140,6 +148,26 @@ int mosquitto_main_loop(struct mosquitto_db *db, mosq_sock_t *listensock, int li
 		expiration_check_time = time(NULL) + 3600;
 	}
 	while(run){//진짜 메인 loop 스타트!
+
+#ifdef PRINT_BROKER_STATE
+		//system topic publish! 수정
+		if ((tmp_time = time(NULL)) - workload_msg_time > 1) {
+
+			snprintf(buf, 10, "%lu", g_msgs_dropped);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/workload/dropped", 2, strlen(buf), buf, 1);
+
+			workload_msg_time = tmp_time;
+			snprintf(buf, 10, "%lu", g_pub_msgs_received);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/workload/received", 2, strlen(buf), buf, 1);
+
+			snprintf(buf, 10, "%lu", g_pub_msgs_sent);
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/workload/sent", 2, strlen(buf), buf, 1);
+
+			snprintf(buf, 10, "%lu", HASH_CNT(hh_sock, db->contexts_by_sock));
+			mqtt3_db_messages_easy_queue(db, NULL, "$SYS/broker/workload/connected", 2, strlen(buf), buf, 1);
+		}
+#endif
+
 		mosquitto__free_disused_contexts(db);
 #ifdef WITH_SYS_TREE
 		if(db->config->sys_interval > 0){
