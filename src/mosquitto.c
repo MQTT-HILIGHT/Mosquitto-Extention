@@ -267,8 +267,7 @@ int main(int argc, char *argv[])
 		strcpy(loop_param->argv[i], argv[i]);
 	}
 
-	pthread_create(&thread_t, NULL, hilight_main, (void *)loop_param);
-
+	pthread_create(&thread_t, NULL, hilight_main, (void *)loop_param);  //½º·¹µå
 
 #if defined(WIN32) || defined(__CYGWIN__)
 	if(argc == 2){

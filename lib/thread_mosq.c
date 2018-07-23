@@ -22,6 +22,7 @@ Contributors:
 
 #include <mosquitto_internal.h>
 #include <net_mosq.h>
+#include <mosquitto.h>
 
 void *_mosquitto_thread_main(void *obj);
 
