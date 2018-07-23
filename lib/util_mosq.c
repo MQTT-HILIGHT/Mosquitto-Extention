@@ -235,6 +235,7 @@ int hilight_db_message_write(element data) //¼öÁ¤
 
 
 //log
+/*
 void _hilight_system_log(struct mosquitto *mosq, const char *fmt, ...) {
 	va_list va;
 	int rc;
@@ -256,7 +257,7 @@ void hilight_system_log(struct mosquitto *mosq, const char *fmt, va_list va) {
 	s[len - 1] = '\0';
 	mqtt3_db_messages_easy_queue(_mosquitto_get_db(), mosq, "$SYS/broker/hilight/log", 0, strlen(s) + 1, s, 0);
 	_mosquitto_free(s);
-}
+}*/
 
 #endif
 
