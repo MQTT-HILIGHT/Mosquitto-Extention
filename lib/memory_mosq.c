@@ -36,7 +36,7 @@ static unsigned long max_memcount = 0;
 
 void _mosquitto_print_memory(char *str) {
 #ifdef REAL_WITH_MEMORY_TRACKING
-	printf("%s  static unsigned long memcount = %lf mb\n", str, (double)memcount / 1024);
+	//printf("%s  static unsigned long memcount = %lf mb\n", str, (double)memcount / 1024);
 	//printf("%s  static unsigned long max_memcount = %d mb\n",str ,memcount/1024);
 #endif
 }
