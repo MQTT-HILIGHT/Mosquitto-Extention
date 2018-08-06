@@ -54,6 +54,22 @@ Contributors:
 #include <mosquitto_broker.h>
 #include <memory_mosq.h>
 #include <util_mosq.h>
+#include <sys/time.h>
+#include <unistd.h>
+
+
+unsigned int GetTickCount()
+{
+	struct timeval gettick;
+	unsigned int tick;
+	int ret;
+	gettimeofday(&gettick, NULL);
+
+	tick = gettick.tv_sec * 1000 + gettick.tv_usec / 1000;
+
+	return tick;
+}
+
 
 struct _sub_token {
 	struct _sub_token *next;
