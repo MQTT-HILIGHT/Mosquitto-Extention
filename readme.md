@@ -5,7 +5,7 @@
 
 ## Building
 
-See <https://wnsgml972.github.io/wnsgml972.github.io/mqtt/mqtt_windows-install.html> for details on building code
+See <https://wnsgml972.github.io/mqtt/mqtt_windows-install.html> for details on building code
 
 ## Links
 
